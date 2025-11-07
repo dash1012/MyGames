@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리듬 게임 - D, F, J, K</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            width: 800px;
+            height: 600px;
+            position: relative;
+            background: #141428;
+            border: 2px solid #333;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .info {
+            position: absolute;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        #score {
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+
+        #combo {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            color: #ffc864;
+            text-shadow: 0 0 10px #ffc864;
+            display: none;
+        }
+
+        #stats {
+            top: 70px;
+            left: 20px;
+            font-size: 14px;
+        }
+
+        #time {
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+        }
+
+        #speed {
+            bottom: 30px;
+            left: 20px;
+            font-size: 14px;
+        }
+
+        #judgement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            display: none;
+            z-index: 20;
+        }
+
+        #judgement.perfect {
+            color: #ffff64;
+        }
+
+        #judgement.good {
+            color: #64ff64;
+        }
+
+        #judgement.miss {
+            color: #ff6464;
+        }
+
+        #resultScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 40, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            pointer-events: all;
+        }
+
+        #grade {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #grade.ss { color: #ffd700; }
+        #grade.s { color: #ff64ff; }
+        #grade.a { color: #64ff64; }
+        #grade.b { color: #64c8ff; }
+        #grade.c { color: #ffc864; }
+        #grade.d { color: #c8c8c8; }
+        #grade.f { color: #969696; }
+
+        #achievement {
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        #achievement.perfect { color: #ffd700; }
+        #achievement.fullcombo { color: #ff64ff; }
+
+        #resultStats {
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        #restartButton {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: #6496ff;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        }
+
+        #restartButton:hover {
+            background: #96c8ff;
+        }
+
+        #exitHint {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 15;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div id="score" class="info">Score: 0</div>
+            <div id="combo" class="info">0 COMBO!</div>
+            <div id="stats" class="info">
+                <div>Perfect: <span id="perfectCount">0</span></div>
+                <div>Good: <span id="goodCount">0</span></div>
+                <div>Miss: <span id="missCount">0</span></div>
+            </div>
+            <div id="time" class="info">Time: 60.0s</div>
+            <div id="speed" class="info">Speed: 200 (+/-)</div>
+            <div id="judgement"></div>
+        </div>
+        <div id="resultScreen">
+            <div id="grade"></div>
+            <div id="achievement"></div>
+            <div id="resultStats"></div>
+            <button id="restartButton">재시작</button>
+            <div id="exitHint">ESC: 종료</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameContainer = document.getElementById('gameContainer');
+
+        // 게임 설정
+        const LANE_COUNT = 4;
+        const LANE_WIDTH = canvas.width / (LANE_COUNT + 2);
+        const HIT_LINE_Y = canvas.height - 150;
+        const HIT_RANGE = 50;
+        const MISS_THRESHOLD = 100;
+        const GAME_DURATION = 60; // 초
+
+        // 키 매핑
+        const KEYS = {
+            'KeyD': 0,
+            'KeyF': 1,
+            'KeyJ': 2,
+            'KeyK': 3
+        };
+        const KEY_NAMES = ['D', 'F', 'J', 'K'];
+
+        // 게임 상태
+        let notes = [];
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let perfectCount = 0;
+        let goodCount = 0;
+        let missCount = 0;
+        let totalNotes = 0;
+        let gameTime = 0;
+        let gameFinished = false;
+        let noteSpeed = 200;
+        let noteSpeedMin = 100;
+        let noteSpeedMax = 400;
+        let noteSpeedStep = 20;
+        let noteSpawnTimer = 0;
+        let noteSpawnInterval = 0.8;
+        let keyPressed = [false, false, false, false];
+        let judgementText = '';
+        let judgementTimer = 0;
+        let particles = [];
+        let isFullCombo = false;
+        let isPerfect = false;
+        let grade = '';
+
+        // 노트 클래스
+        class Note {
+            constructor(lane, y, speed) {
+                this.lane = lane;
+                this.y = y;
+                this.speed = speed;
+                this.hit = false;
+                this.missed = false;
+                this.judgement = null;
+            }
+
+            update(deltaTime) {
+                if (!this.hit && !this.missed) {
+                    this.y += this.speed * deltaTime;
+                }
+            }
+
+            checkHit(targetY, hitRange) {
+                const distance = Math.abs(this.y - targetY);
+                if (distance <= hitRange * 0.3) {
+                    return 'PERFECT';
+                } else if (distance <= hitRange) {
+                    return 'GOOD';
+                }
+                return null;
+            }
+
+            checkMiss(targetY, missThreshold) {
+                return this.y > targetY + missThreshold;
+            }
+        }
+
+        // 노트 생성
+        function spawnNote() {
+            const lane = Math.floor(Math.random() * LANE_COUNT);
+            notes.push(new Note(lane, -50, noteSpeed));
+            totalNotes++;
+        }
+
+        // 판정 적용
+        function applyJudgement(judgement) {
+            if (judgement === 'PERFECT') {
+                score += 100;
+                combo++;
+                perfectCount++;
+                showJudgement('PERFECT!', 'perfect');
+                if (combo >= 10 && combo % 10 === 0) {
+                    createSpecialEffect('PERFECT COMBO!');
+                }
+            } else if (judgement === 'GOOD') {
+                score += 50;
+                combo++;
+                goodCount++;
+                showJudgement('GOOD', 'good');
+            } else {
+                combo = 0;
+                missCount++;
+                showJudgement('MISS', 'miss');
+            }
+
+            if (combo > maxCombo) {
+                maxCombo = combo;
+            }
+
+            updateUI();
+        }
+
+        // 판정 표시
+        function showJudgement(text, type) {
+            const judgementEl = document.getElementById('judgement');
+            judgementEl.textContent = text;
+            judgementEl.className = type;
+            judgementEl.style.display = 'block';
+            judgementTimer = 0.5;
+        }
+
+        // 노트 히트 시도
+        function tryHitNote(lane) {
+            let closestNote = null;
+            let closestDistance = Infinity;
+
+            for (const note of notes) {
+                if (note.lane === lane && !note.hit && !note.missed) {
+                    const distance = Math.abs(note.y - HIT_LINE_Y);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestNote = note;
+                    }
+                }
+            }
+
+            if (closestNote) {
+                const judgement = closestNote.checkHit(HIT_LINE_Y, HIT_RANGE);
+                if (judgement) {
+                    closestNote.hit = true;
+                    closestNote.judgement = judgement;
+                    applyJudgement(judgement);
+                } else if (closestDistance < HIT_RANGE * 1.5) {
+                    closestNote.hit = true;
+                    closestNote.judgement = 'GOOD';
+                    applyJudgement('GOOD');
+                }
+            }
+        }
+
+        // 특수 이펙트 생성
+        function createSpecialEffect(text) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 3 + 2;
+                particles.push({
+                    x: centerX,
+                    y: centerY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    color: `rgb(${200 + Math.random() * 55}, ${200 + Math.random() * 55}, ${100 + Math.random() * 155})`
+                });
+            }
+
+            showJudgement(text, 'perfect');
+        }
+
+        // 등급 계산
+        function calculateGrade() {
+            if (totalNotes === 0) return 'F';
+
+            const accuracy = (perfectCount + goodCount) / totalNotes;
+            const perfectRatio = perfectCount / totalNotes;
+
+            if (isPerfect) {
+                return 'SS';
+            } else if (isFullCombo && perfectRatio >= 0.9) {
+                return 'S';
+            } else if (isFullCombo) {
+                return 'A';
+            } else if (accuracy >= 0.95 && perfectRatio >= 0.8) {
+                return 'A';
+            } else if (accuracy >= 0.9) {
+                return 'B';
+            } else if (accuracy >= 0.8) {
+                return 'C';
+            } else if (accuracy >= 0.7) {
+                return 'D';
+            } else {
+                return 'F';
+            }
+        }
+
+        // 업적 체크
+        function checkAchievements() {
+            isFullCombo = (missCount === 0 && totalNotes > 0);
+            isPerfect = (missCount === 0 && goodCount === 0 && totalNotes > 0);
+        }
+
+        // 게임 재시작
+        function resetGame() {
+            notes = [];
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            perfectCount = 0;
+            goodCount = 0;
+            missCount = 0;
+            totalNotes = 0;
+            gameTime = 0;
+            gameFinished = false;
+            noteSpawnTimer = 0;
+            noteSpawnInterval = 0.8;
+            particles = [];
+            judgementText = '';
+            judgementTimer = 0;
+            isFullCombo = false;
+            isPerfect = false;
+            grade = '';
+            document.getElementById('resultScreen').style.display = 'none';
+            updateUI();
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+            const comboEl = document.getElementById('combo');
+            if (combo > 0) {
+                comboEl.textContent = `${combo} COMBO!`;
+                comboEl.style.display = 'block';
+            } else {
+                comboEl.style.display = 'none';
+            }
+            document.getElementById('perfectCount').textContent = perfectCount;
+            document.getElementById('goodCount').textContent = goodCount;
+            document.getElementById('missCount').textContent = missCount;
+            document.getElementById('speed').textContent = `Speed: ${Math.floor(noteSpeed)} (+/-)`;
+        }
+
+        // 결과 화면 표시
+        function showResultScreen() {
+            checkAchievements();
+            grade = calculateGrade();
+
+            if (isPerfect) {
+                createSpecialEffect('PERFECT!');
+            } else if (isFullCombo) {
+                createSpecialEffect('FULL COMBO!');
+            }
+
+            const resultScreen = document.getElementById('resultScreen');
+            const gradeEl = document.getElementById('grade');
+            gradeEl.textContent = grade;
+            gradeEl.className = grade.toLowerCase();
+
+            const achievementEl = document.getElementById('achievement');
+            if (isPerfect) {
+                achievementEl.textContent = 'PERFECT!';
+                achievementEl.className = 'perfect';
+                achievementEl.style.display = 'block';
+            } else if (isFullCombo) {
+                achievementEl.textContent = 'FULL COMBO!';
+                achievementEl.className = 'fullcombo';
+                achievementEl.style.display = 'block';
+            } else {
+                achievementEl.style.display = 'none';
+            }
+
+            const accuracy = totalNotes > 0 ? ((perfectCount + goodCount) / totalNotes * 100).toFixed(1) : 0;
+            document.getElementById('resultStats').innerHTML = `
+                <div>Score: ${score}</div>
+                <div>Perfect: ${perfectCount}</div>
+                <div>Good: ${goodCount}</div>
+                <div>Miss: ${missCount}</div>
+                <div>Max Combo: ${maxCombo}</div>
+                <div>Total Notes: ${totalNotes}</div>
+                <div>Accuracy: ${accuracy}%</div>
+            `;
+
+            resultScreen.style.display = 'flex';
+        }
+
+        // 렌더링
+        function render() {
+            // 배경
+            ctx.fillStyle = '#141428';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameFinished) {
+                // 결과 화면은 HTML로 처리
+                return;
+            }
+
+            // 레인 그리기
+            for (let i = 0; i < LANE_COUNT; i++) {
+                const x = (i + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+
+                // 레인 배경
+                ctx.fillStyle = '#282828';
+                ctx.fillRect(x - LANE_WIDTH / 2 + 10, 0, LANE_WIDTH - 20, canvas.height);
+
+                // 키 표시
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '36px "Malgun Gothic", "맑은 고딕", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(KEY_NAMES[i], x, HIT_LINE_Y + 30);
+
+                // 키가 눌렸을 때 하이라이트
+                if (keyPressed[i]) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(x - LANE_WIDTH / 2 + 10, HIT_LINE_Y - 20, LANE_WIDTH - 20, 40);
+                }
+            }
+
+            // 히트 라인
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(LANE_WIDTH, HIT_LINE_Y);
+            ctx.lineTo(canvas.width - LANE_WIDTH, HIT_LINE_Y);
+            ctx.stroke();
+
+            // 노트 그리기
+            for (const note of notes) {
+                if (note.hit) continue;
+
+                const x = (note.lane + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+                ctx.fillStyle = note.missed ? '#ff6464' : '#64c8ff';
+                ctx.fillRect(x - 20, note.y - 15, 40, 30);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - 20, note.y - 15, 40, 30);
+            }
+
+            // 파티클 렌더링
+            for (const particle of particles) {
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // 시간 표시
+            const timeLeft = Math.max(0, GAME_DURATION - gameTime);
+            document.getElementById('time').textContent = `Time: ${timeLeft.toFixed(1)}s`;
+        }
+
+        // 업데이트
+        function update(deltaTime) {
+            if (gameFinished) {
+                // 파티클만 업데이트
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= deltaTime * 0.5;
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+                return;
+            }
+
+            gameTime += deltaTime;
+
+            // 게임 종료 체크
+            if (gameTime >= GAME_DURATION && !gameFinished) {
+                gameFinished = true;
+                showResultScreen();
+            }
+
+            // 노트 생성
+            noteSpawnTimer += deltaTime;
+            if (noteSpawnTimer >= noteSpawnInterval) {
+                noteSpawnTimer = 0;
+                noteSpawnInterval = Math.max(0.4, 0.8 - gameTime * 0.005);
+                spawnNote();
+            }
+
+            // 노트 업데이트
+            for (const note of notes) {
+                note.update(deltaTime);
+
+                if (!note.hit && !note.missed) {
+                    if (note.checkMiss(HIT_LINE_Y, MISS_THRESHOLD)) {
+                        note.missed = true;
+                        note.judgement = 'MISS';
+                        combo = 0;
+                        missCount++;
+                        showJudgement('MISS', 'miss');
+                        updateUI();
+                    }
+                }
+            }
+
+            // 화면 밖으로 나간 노트 제거
+            notes = notes.filter(note => !note.hit && note.y < canvas.height + 100);
+
+            // 파티클 업데이트
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= deltaTime * 0.5;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // 판정 텍스트 타이머
+            if (judgementTimer > 0) {
+                judgementTimer -= deltaTime;
+                if (judgementTimer <= 0) {
+                    document.getElementById('judgement').style.display = 'none';
+                }
+            }
+        }
+
+        // 이벤트 리스너
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape') {
+                if (gameFinished) {
+                    window.close();
+                } else {
+                    gameFinished = true;
+                    showResultScreen();
+                }
+                return;
+            }
+
+            // 노트 속도 조절
+            if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+                noteSpeed = Math.min(noteSpeedMax, noteSpeed + noteSpeedStep);
+                updateUI();
+            } else if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+                noteSpeed = Math.max(noteSpeedMin, noteSpeed - noteSpeedStep);
+                updateUI();
+            }
+
+            if (gameFinished) return;
+
+            if (KEYS.hasOwnProperty(e.code)) {
+                const lane = KEYS[e.code];
+                keyPressed[lane] = true;
+                tryHitNote(lane);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (gameFinished) return;
+            if (KEYS.hasOwnProperty(e.code)) {
+                keyPressed[KEYS[e.code]] = false;
+            }
+        });
+
+        document.getElementById('restartButton').addEventListener('click', resetGame);
+
+        // 게임 루프
+        let lastTime = performance.now();
+        function gameLoop(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            update(deltaTime);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 초기화
+        updateUI();
+        gameLoop(performance.now());
+    </script>
+</body>
+</html>
+
