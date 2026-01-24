@@ -2,28 +2,29 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Tetris</title>
+<title>Tetris Tall</title>
 <style>
-  body {
-    background:#111;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    font-family:Arial;
-  }
-  .game { display:flex; gap:20px; }
-  canvas { background:black; border:2px solid white; }
+body{
+  background:#111;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  font-family:Arial;
+}
+.game{display:flex;gap:20px}
+canvas{background:black;border:2px solid white}
 </style>
 </head>
 <body>
 
 <div class="game">
-  <canvas id="game" width="200" height="400"></canvas>
+  <canvas id="game" width="200" height="600"></canvas>
   <div>
     <h3>Score</h3><div id="score">0</div>
     <h3>Time</h3><div id="time">0s</div>
+    <h3>Combo</h3><div id="combo">0</div>
     <h3>Next</h3><canvas id="next" width="80" height="80"></canvas>
     <h3>Hold</h3><canvas id="hold" width="80" height="80"></canvas>
   </div>
@@ -31,43 +32,33 @@
 
 <script>
 /* ===== Canvas ===== */
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 ctx.scale(20,20);
+const nextCtx=document.getElementById("next").getContext("2d"); nextCtx.scale(20,20);
+const holdCtx=document.getElementById("hold").getContext("2d"); holdCtx.scale(20,20);
 
-const nextCtx = document.getElementById("next").getContext("2d");
-nextCtx.scale(20,20);
-const holdCtx = document.getElementById("hold").getContext("2d");
-holdCtx.scale(20,20);
+/* ===== Field Size ===== */
+const COLS=10;
+const ROWS=30;
 
-/* ===== Game Data ===== */
-const COLS = 10;
-const ROWS = 20;
-
-const arena = Array.from({length:ROWS},()=>Array(COLS).fill(0));
+/* ===== Data ===== */
+const arena=Array.from({length:ROWS},()=>Array(COLS).fill(0));
 const pieces="ILJOTSZ";
 const colors=[null,"#00f0f0","#0000f0","#f0a000","#f0f000","#00f000","#a000f0","#f00000"];
 
-let score=0;
-let elapsed=0;
+let score=0, combo=0, elapsed=0;
+let baseInterval=750, dropInterval=baseInterval;
+let dropCounter=0, lastTime=0;
 
-/* Difficulty (EASIER over time) */
-let baseInterval = 700;
-let dropInterval = baseInterval;
-let dropCounter=0;
-let lastTime=0;
+let holdPiece=null, canHold=true;
+let garbageTimer=0;
 
-/* Hold */
-let holdPiece=null;
-let canHold=true;
-
-/* Player */
 const player={pos:{x:0,y:0},matrix:null};
 let nextPiece=randomPiece();
 
-/* ===== Functions ===== */
-function randomPiece(){ return createPiece(pieces[Math.random()*7|0]); }
-
+/* ===== Piece ===== */
+function randomPiece(){return createPiece(pieces[Math.random()*7|0]);}
 function createPiece(t){
   return {
     I:[[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]],
@@ -80,6 +71,7 @@ function createPiece(t){
   }[t];
 }
 
+/* ===== Mechanics ===== */
 function collide(){
   return player.matrix.some((r,y)=>
     r.some((v,x)=>
@@ -116,13 +108,24 @@ function wallKick(){
 }
 
 function sweep(){
+  let lines=0;
   for(let y=ROWS-1;y>=0;y--){
     if(arena[y].every(v=>v)){
       arena.splice(y,1);
       arena.unshift(Array(COLS).fill(0));
-      score+=100;
+      lines++;
     }
   }
+  if(lines){
+    combo++;
+    score+=lines*100+combo*50;
+  }else combo=0;
+}
+
+function addGarbage(){
+  const hole=Math.random()*COLS|0;
+  arena.shift();
+  arena.push(Array.from({length:COLS},(_,i)=>i===hole?0:8));
 }
 
 function drop(){
@@ -151,7 +154,7 @@ function spawn(){
   canHold=true;
   if(collide()){
     arena.forEach(r=>r.fill(0));
-    score=0;
+    score=0; combo=0;
   }
 }
 
@@ -170,11 +173,12 @@ function ghostY(){
   return gy;
 }
 
+/* ===== Draw ===== */
 function drawMatrix(m,o,c,a=1){
   c.globalAlpha=a;
   m.forEach((r,y)=>r.forEach((v,x)=>{
     if(v){
-      c.fillStyle=colors[v];
+      c.fillStyle=colors[v]||"#555";
       c.fillRect(x+o.x,y+o.y,1,1);
     }
   }));
@@ -194,21 +198,19 @@ function draw(){
   if(holdPiece) drawMatrix(holdPiece,{x:0,y:0},holdCtx);
 }
 
-/* ===== Game Loop ===== */
+/* ===== Loop ===== */
 function update(t=0){
-  const delta=t-lastTime;
-  lastTime=t;
-  dropCounter+=delta;
-  elapsed+=delta;
+  const delta=t-lastTime; lastTime=t;
+  elapsed+=delta; dropCounter+=delta; garbageTimer+=delta;
 
-  /* 🔽 Difficulty REDUCES over time */
-  const slowdown = Math.floor(elapsed/15000)*100;
-  dropInterval = Math.min(baseInterval + slowdown, 1400);
+  dropInterval=Math.min(baseInterval+Math.floor(elapsed/20000)*100,1300);
 
   if(dropCounter>dropInterval) drop();
+  if(garbageTimer>40000){ addGarbage(); garbageTimer=0; }
 
   document.getElementById("time").innerText=(elapsed/1000|0)+"s";
   document.getElementById("score").innerText=score;
+  document.getElementById("combo").innerText=combo;
 
   draw();
   requestAnimationFrame(update);
