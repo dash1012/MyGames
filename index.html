@@ -20,7 +20,7 @@
 <body>
 
 <div class="game">
-  <canvas id="game" width="240" height="400"></canvas>
+  <canvas id="game" width="200" height="400"></canvas>
   <div>
     <h3>Score</h3><div id="score">0</div>
     <h3>Time</h3><div id="time">0s</div>
@@ -30,6 +30,7 @@
 </div>
 
 <script>
+/* ===== Canvas ===== */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 ctx.scale(20,20);
@@ -39,18 +40,32 @@ nextCtx.scale(20,20);
 const holdCtx = document.getElementById("hold").getContext("2d");
 holdCtx.scale(20,20);
 
+/* ===== Game Data ===== */
+const COLS = 10;
+const ROWS = 20;
+
+const arena = Array.from({length:ROWS},()=>Array(COLS).fill(0));
+const pieces="ILJOTSZ";
 const colors=[null,"#00f0f0","#0000f0","#f0a000","#f0f000","#00f000","#a000f0","#f00000"];
 
-const pieces="ILJOTSZ";
-const arena = Array.from({length:20},()=>Array(12).fill(0));
+let score=0;
+let elapsed=0;
 
-let score=0, time=0, dropInterval=800;
-let lastTime=0, dropCounter=0;
-let holdPiece=null, canHold=true;
+/* Difficulty (EASIER over time) */
+let baseInterval = 700;
+let dropInterval = baseInterval;
+let dropCounter=0;
+let lastTime=0;
 
+/* Hold */
+let holdPiece=null;
+let canHold=true;
+
+/* Player */
 const player={pos:{x:0,y:0},matrix:null};
 let nextPiece=randomPiece();
 
+/* ===== Functions ===== */
 function randomPiece(){ return createPiece(pieces[Math.random()*7|0]); }
 
 function createPiece(t){
@@ -90,7 +105,7 @@ function rotate(m){
 
 function wallKick(){
   const x=player.pos.x;
-  for(let i=1;i<4;i++){
+  for(let i=1;i<=3;i++){
     player.pos.x+=i;
     if(!collide()) return;
     player.pos.x-=2*i;
@@ -101,10 +116,10 @@ function wallKick(){
 }
 
 function sweep(){
-  for(let y=19;y>=0;y--){
+  for(let y=ROWS-1;y>=0;y--){
     if(arena[y].every(v=>v)){
       arena.splice(y,1);
-      arena.unshift(Array(12).fill(0));
+      arena.unshift(Array(COLS).fill(0));
       score+=100;
     }
   }
@@ -132,28 +147,31 @@ function hardDrop(){
 function spawn(){
   player.matrix=nextPiece;
   nextPiece=randomPiece();
-  player.pos={x:4,y:0};
+  player.pos={x:3,y:0};
   canHold=true;
-  if(collide()) arena.forEach(r=>r.fill(0)),score=0;
+  if(collide()){
+    arena.forEach(r=>r.fill(0));
+    score=0;
+  }
 }
 
 function hold(){
   if(!canHold) return;
   [holdPiece,player.matrix]=[player.matrix,holdPiece||randomPiece()];
-  player.pos={x:4,y:0};
+  player.pos={x:3,y:0};
   canHold=false;
 }
 
 function ghostY(){
   let y=player.pos.y;
-  while(!collide()){player.pos.y++;}
+  while(!collide()) player.pos.y++;
   const gy=player.pos.y-1;
   player.pos.y=y;
   return gy;
 }
 
-function drawMatrix(m,o,c,alpha=1){
-  c.globalAlpha=alpha;
+function drawMatrix(m,o,c,a=1){
+  c.globalAlpha=a;
   m.forEach((r,y)=>r.forEach((v,x)=>{
     if(v){
       c.fillStyle=colors[v];
@@ -164,7 +182,7 @@ function drawMatrix(m,o,c,alpha=1){
 }
 
 function draw(){
-  ctx.clearRect(0,0,12,20);
+  ctx.clearRect(0,0,COLS,ROWS);
   drawMatrix(arena,{x:0,y:0},ctx);
   drawMatrix(player.matrix,{x:player.pos.x,y:ghostY()},ctx,0.3);
   drawMatrix(player.matrix,player.pos,ctx);
@@ -176,16 +194,27 @@ function draw(){
   if(holdPiece) drawMatrix(holdPiece,{x:0,y:0},holdCtx);
 }
 
+/* ===== Game Loop ===== */
 function update(t=0){
-  const d=t-lastTime; lastTime=t;
-  dropCounter+=d; time+=d;
+  const delta=t-lastTime;
+  lastTime=t;
+  dropCounter+=delta;
+  elapsed+=delta;
+
+  /* 🔽 Difficulty REDUCES over time */
+  const slowdown = Math.floor(elapsed/15000)*100;
+  dropInterval = Math.min(baseInterval + slowdown, 1400);
+
   if(dropCounter>dropInterval) drop();
-  if(time%15000<50 && dropInterval>150) dropInterval-=50;
-  document.getElementById("time").innerText=(time/1000|0)+"s";
+
+  document.getElementById("time").innerText=(elapsed/1000|0)+"s";
   document.getElementById("score").innerText=score;
-  draw(); requestAnimationFrame(update);
+
+  draw();
+  requestAnimationFrame(update);
 }
 
+/* ===== Controls ===== */
 document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){player.pos.x--;if(collide())player.pos.x++;}
   if(e.key==="ArrowRight"){player.pos.x++;if(collide())player.pos.x--;}
