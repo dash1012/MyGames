@@ -1,233 +1,2293 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Tetris Tall</title>
-<style>
-body{
-  background:#111;
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  font-family:Arial;
-}
-.game{display:flex;gap:20px}
-canvas{background:black;border:2px solid white}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리듬 게임 - D, F, J, K</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            width: 800px;
+            height: 600px;
+            position: relative;
+            background: #141428;
+            border: 2px solid #333;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .info {
+            position: absolute;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        #score {
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+
+        #combo {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            color: #ffc864;
+            text-shadow: 0 0 10px #ffc864;
+            display: none;
+        }
+
+        #stats {
+            top: 70px;
+            left: 20px;
+            font-size: 14px;
+        }
+
+        #time {
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+        }
+
+        #speed {
+            bottom: 80px;
+            left: 20px;
+            font-size: 14px;
+        }
+
+        #healthBar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 15;
+        }
+
+        #healthFill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #64ff64 0%, #ffc864 50%, #ff6464 100%);
+            transition: width 0.3s ease;
+            border-radius: 8px;
+        }
+
+        #healthText {
+            position: absolute;
+            bottom: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 15;
+        }
+
+        #judgement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            display: none;
+            z-index: 20;
+        }
+
+        #judgement.perfect {
+            color: #ffff64;
+        }
+
+        #judgement.good {
+            color: #64ff64;
+        }
+
+        #judgement.miss {
+            color: #ff6464;
+        }
+
+        #resultScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 40, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            pointer-events: all;
+        }
+
+        #grade {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #grade.ss { color: #ffd700; }
+        #grade.s { color: #ff64ff; }
+        #grade.a { color: #64ff64; }
+        #grade.b { color: #64c8ff; }
+        #grade.c { color: #ffc864; }
+        #grade.d { color: #c8c8c8; }
+        #grade.f { color: #969696; }
+
+        #achievement {
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        #achievement.perfect { color: #ffd700; }
+        #achievement.fullcombo { color: #ff64ff; }
+
+        #resultStats {
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        #restartButton, .menuButton, .difficultyButton, .settingButton {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: #6496ff;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            margin: 10px;
+        }
+
+        #restartButton:hover, .menuButton:hover, .difficultyButton:hover, .settingButton:hover {
+            background: #96c8ff;
+        }
+
+        .difficultyButton {
+            font-size: 20px;
+            padding: 12px 30px;
+        }
+
+        .difficultyButton.selected {
+            background: #ff64ff;
+            border-color: #ff64ff;
+        }
+
+        #exitHint {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        #mainMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 40, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            pointer-events: all;
+        }
+
+        #mainMenu h1 {
+            font-size: 48px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px #6496ff;
+        }
+
+        #difficultySelection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        #difficultySelection h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        #difficultyButtons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #highScore {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #ffc864;
+        }
+
+        #settingsScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 40, 0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            pointer-events: all;
+        }
+
+        #settingsScreen h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+
+        .keySetting {
+            display: flex;
+            align-items: center;
+            margin: 15px;
+            font-size: 20px;
+        }
+
+        .keySetting label {
+            width: 150px;
+            text-align: right;
+            margin-right: 20px;
+        }
+
+        .keyButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #444;
+            color: white;
+            border: 2px solid #666;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 80px;
+            transition: all 0.3s;
+        }
+
+        .keyButton:hover {
+            background: #555;
+        }
+
+        .keyButton.waiting {
+            background: #ff64ff;
+            border-color: #ff64ff;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        #backToMenuButton {
+            margin-top: 30px;
+        }
+
+        /* 카운트다운 */
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: bold;
+            z-index: 250;
+            display: none;
+            text-shadow: 0 0 30px currentColor;
+            animation: countdownPulse 0.5s ease-out;
+        }
+
+        @keyframes countdownPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* 판정 애니메이션 */
+        .judgementText {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor;
+            pointer-events: none;
+            z-index: 20;
+            animation: judgementFloat 1s ease-out forwards;
+        }
+
+        @keyframes judgementFloat {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -150%) scale(0.8); opacity: 0; }
+        }
+
+        /* 판정 라인 표시 */
+        .judgementLine {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background: currentColor;
+            box-shadow: 0 0 10px currentColor;
+            z-index: 15;
+            animation: lineFade 2s ease-out forwards;
+        }
+
+        @keyframes lineFade {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 판정 히스토리 */
+        #judgementHistory {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 15;
+        }
+
+        .judgementIcon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: iconFade 3s ease-out forwards;
+        }
+
+        .judgementIcon.perfect { background: #ffff64; border-color: #ffff64; }
+        .judgementIcon.good { background: #64ff64; border-color: #64ff64; }
+        .judgementIcon.miss { background: #ff6464; border-color: #ff6464; }
+
+        @keyframes iconFade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* 콤보 개선 */
+        #combo {
+            font-size: 48px;
+            font-weight: bold;
+            animation: comboPulse 0.3s ease-out;
+        }
+
+        @keyframes comboPulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        /* BPM 표시 */
+        #bpm {
+            top: 50px;
+            right: 20px;
+            font-size: 18px;
+            color: #ffc864;
+        }
+
+        /* 노트 프리뷰 */
+        .notePreview {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            border: 2px solid;
+            border-radius: 5px;
+            opacity: 0.5;
+            z-index: 5;
+        }
+
+        /* 속도 조절 슬라이더 */
+        .speedControl {
+            display: flex;
+            align-items: center;
+            margin: 15px;
+            font-size: 18px;
+        }
+
+        .speedControl label {
+            width: 100px;
+            text-align: right;
+            margin-right: 20px;
+        }
+
+        .speedSlider {
+            width: 200px;
+            height: 6px;
+            background: #444;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .speedSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #6496ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .speedSlider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #6496ff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* 판정 통계 그래프 */
+        #judgementGraph {
+            width: 300px;
+            height: 150px;
+            margin: 20px auto;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #666;
+        }
+
+        .graphBar {
+            position: absolute;
+            bottom: 0;
+            transition: height 0.5s ease-out;
+        }
+
+        .graphBar.perfect { background: #ffff64; width: 33.33%; left: 0; }
+        .graphBar.good { background: #64ff64; width: 33.33%; left: 33.33%; }
+        .graphBar.miss { background: #ff6464; width: 33.33%; left: 66.66%; }
+
+        /* EARLY/LATE 표시 */
+        .timingIndicator {
+            position: absolute;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 16;
+            animation: timingFade 1s ease-out forwards;
+        }
+
+        .timingIndicator.early {
+            color: #64c8ff;
+            left: 20px;
+        }
+
+        .timingIndicator.late {
+            color: #ffc864;
+            right: 20px;
+        }
+
+        @keyframes timingFade {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        /* 사운드 설정 */
+        .soundSetting {
+            display: flex;
+            align-items: center;
+            margin: 15px;
+            font-size: 18px;
+        }
+
+        .soundSetting label {
+            width: 150px;
+            text-align: right;
+            margin-right: 20px;
+        }
+
+        .soundToggle {
+            width: 50px;
+            height: 25px;
+            background: #444;
+            border-radius: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .soundToggle.active {
+            background: #6496ff;
+        }
+
+        .soundToggle::after {
+            content: '';
+            position: absolute;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .soundToggle.active::after {
+            left: 27px;
+        }
+
+        /* 곡 선택 화면 */
+        #songSelection {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 40, 0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            pointer-events: all;
+        }
+
+        #songSelection h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+
+        #songList {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 600px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .songItem {
+            padding: 20px;
+            background: rgba(100, 100, 150, 0.3);
+            border: 2px solid #666;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .songItem:hover {
+            background: rgba(100, 100, 150, 0.5);
+            border-color: #6496ff;
+            transform: translateX(10px);
+        }
+
+        .songItem.selected {
+            background: rgba(100, 150, 255, 0.5);
+            border-color: #6496ff;
+            box-shadow: 0 0 20px #6496ff;
+        }
+
+        .songInfo {
+            flex: 1;
+        }
+
+        .songTitle {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .songArtist {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .songBPM {
+            font-size: 14px;
+            color: #ffc864;
+        }
+
+        .songScore {
+            text-align: right;
+            margin-left: 20px;
+        }
+
+        .songHighScore {
+            font-size: 18px;
+            color: #ffc864;
+            margin-bottom: 5px;
+        }
+
+        .songDifficulty {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        #backToSongList {
+            margin-top: 20px;
+        }
+
+        #songInfo {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        #songInfo .songTitle {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        #songInfo .songArtist {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        #songInfo .songBPM {
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div id="score" class="info">Score: 0</div>
+            <div id="combo" class="info">0 COMBO!</div>
+            <div id="stats" class="info">
+                <div>Perfect: <span id="perfectCount">0</span></div>
+                <div>Good: <span id="goodCount">0</span></div>
+                <div>Miss: <span id="missCount">0</span></div>
+            </div>
+            <div id="time" class="info">Time: 60.0s</div>
+            <div id="bpm" class="info">BPM: 120</div>
+            <div id="speed" class="info">Speed: 200</div>
+            <div id="healthText">체력: 100%</div>
+            <div id="healthBar">
+                <div id="healthFill"></div>
+            </div>
+            <div id="judgement"></div>
+            <div id="judgementHistory"></div>
+            <div id="countdown"></div>
+        </div>
+        <div id="songSelection">
+            <h2>곡 선택</h2>
+            <div id="songList"></div>
+            <button class="menuButton" id="selectSongButton" style="margin-top: 20px;">곡 선택</button>
+            <button class="menuButton" id="backToMainFromSong">메인 메뉴</button>
+        </div>
+        <div id="mainMenu">
+            <h1>리듬 게임</h1>
+            <div id="songInfo" style="display: none;">
+                <div class="songTitle"></div>
+                <div class="songArtist"></div>
+                <div class="songBPM"></div>
+            </div>
+            <div id="difficultySelection">
+                <h2>난이도 선택</h2>
+                <div id="difficultyButtons">
+                    <button class="difficultyButton" data-difficulty="beginner">입문</button>
+                    <button class="difficultyButton" data-difficulty="easy">이지</button>
+                    <button class="difficultyButton" data-difficulty="normal">노말</button>
+                    <button class="difficultyButton" data-difficulty="hard">하드</button>
+                    <button class="difficultyButton" data-difficulty="crazy">크레이지</button>
+                </div>
+            </div>
+            <div id="highScore"></div>
+            <button class="menuButton" id="startButton">게임 시작</button>
+            <button class="menuButton" id="selectSongMenuButton">곡 선택</button>
+            <button class="menuButton" id="settingsButton">설정</button>
+        </div>
+        <div id="settingsScreen">
+            <h2>설정</h2>
+            <div class="keySetting">
+                <label>레인 1:</label>
+                <button class="keyButton" id="keyButton0">D</button>
+            </div>
+            <div class="keySetting">
+                <label>레인 2:</label>
+                <button class="keyButton" id="keyButton1">F</button>
+            </div>
+            <div class="keySetting">
+                <label>레인 3:</label>
+                <button class="keyButton" id="keyButton2">J</button>
+            </div>
+            <div class="keySetting">
+                <label>레인 4:</label>
+                <button class="keyButton" id="keyButton3">K</button>
+            </div>
+            <div class="speedControl">
+                <label>노트 속도:</label>
+                <input type="range" class="speedSlider" id="speedSlider" min="100" max="400" value="200" step="10">
+                <span id="speedValue" style="margin-left: 10px; min-width: 50px;">200</span>
+            </div>
+            <div class="soundSetting">
+                <label>사운드 효과:</label>
+                <div class="soundToggle" id="soundToggle"></div>
+            </div>
+            <button class="menuButton" id="backToMenuButton">메인 메뉴로</button>
+        </div>
+        <div id="resultScreen">
+            <div id="grade"></div>
+            <div id="achievement"></div>
+            <div id="resultStats"></div>
+            <div id="judgementGraph"></div>
+            <button id="restartButton">메인 메뉴</button>
+            <div id="exitHint">ESC: 종료</div>
+        </div>
+    </div>
 
-<div class="game">
-  <canvas id="game" width="200" height="600"></canvas>
-  <div>
-    <h3>Score</h3><div id="score">0</div>
-    <h3>Time</h3><div id="time">0s</div>
-    <h3>Combo</h3><div id="combo">0</div>
-    <h3>Next</h3><canvas id="next" width="80" height="80"></canvas>
-    <h3>Hold</h3><canvas id="hold" width="80" height="80"></canvas>
-  </div>
-</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameContainer = document.getElementById('gameContainer');
 
-<script>
-/* ===== Canvas ===== */
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-ctx.scale(20,20);
-const nextCtx=document.getElementById("next").getContext("2d"); nextCtx.scale(20,20);
-const holdCtx=document.getElementById("hold").getContext("2d"); holdCtx.scale(20,20);
+        // 게임 설정
+        const LANE_COUNT = 4;
+        const LANE_WIDTH = canvas.width / (LANE_COUNT + 2);
+        const HIT_LINE_Y = canvas.height - 150;
+        const HIT_RANGE = 50;
+        const MISS_THRESHOLD = 100;
 
-/* ===== Field Size ===== */
-const COLS=10;
-const ROWS=30;
+        // 곡 데이터
+        const SONGS = [
+            {
+                id: 'song1',
+                title: 'Electro Pulse',
+                artist: 'DJ MAX',
+                bpm: 128,
+                difficulties: {
+                    beginner: { speed: 150, spawnInterval: 1.2, gameDuration: 60, longNoteChance: 0.1 },
+                    easy: { speed: 180, spawnInterval: 1.0, gameDuration: 60, longNoteChance: 0.15 },
+                    normal: { speed: 220, spawnInterval: 0.8, gameDuration: 60, longNoteChance: 0.2 },
+                    hard: { speed: 280, spawnInterval: 0.6, gameDuration: 60, longNoteChance: 0.25 },
+                    crazy: { speed: 350, spawnInterval: 0.4, gameDuration: 60, longNoteChance: 0.3 }
+                }
+            },
+            {
+                id: 'song2',
+                title: 'Neon Nights',
+                artist: 'Cyber Beats',
+                bpm: 140,
+                difficulties: {
+                    beginner: { speed: 160, spawnInterval: 1.1, gameDuration: 60, longNoteChance: 0.12 },
+                    easy: { speed: 190, spawnInterval: 0.9, gameDuration: 60, longNoteChance: 0.18 },
+                    normal: { speed: 240, spawnInterval: 0.7, gameDuration: 60, longNoteChance: 0.22 },
+                    hard: { speed: 300, spawnInterval: 0.5, gameDuration: 60, longNoteChance: 0.28 },
+                    crazy: { speed: 380, spawnInterval: 0.35, gameDuration: 60, longNoteChance: 0.35 }
+                }
+            },
+            {
+                id: 'song3',
+                title: 'Rhythm Revolution',
+                artist: 'Beat Master',
+                bpm: 160,
+                difficulties: {
+                    beginner: { speed: 170, spawnInterval: 1.0, gameDuration: 60, longNoteChance: 0.15 },
+                    easy: { speed: 200, spawnInterval: 0.8, gameDuration: 60, longNoteChance: 0.2 },
+                    normal: { speed: 260, spawnInterval: 0.6, gameDuration: 60, longNoteChance: 0.25 },
+                    hard: { speed: 320, spawnInterval: 0.45, gameDuration: 60, longNoteChance: 0.3 },
+                    crazy: { speed: 400, spawnInterval: 0.3, gameDuration: 60, longNoteChance: 0.4 }
+                }
+            },
+            {
+                id: 'song4',
+                title: 'Digital Dreams',
+                artist: 'Synth Wave',
+                bpm: 120,
+                difficulties: {
+                    beginner: { speed: 140, spawnInterval: 1.3, gameDuration: 60, longNoteChance: 0.08 },
+                    easy: { speed: 170, spawnInterval: 1.1, gameDuration: 60, longNoteChance: 0.12 },
+                    normal: { speed: 210, spawnInterval: 0.9, gameDuration: 60, longNoteChance: 0.18 },
+                    hard: { speed: 270, spawnInterval: 0.65, gameDuration: 60, longNoteChance: 0.22 },
+                    crazy: { speed: 340, spawnInterval: 0.45, gameDuration: 60, longNoteChance: 0.28 }
+                }
+            },
+            {
+                id: 'song5',
+                title: 'Bass Drop',
+                artist: 'Hard Core',
+                bpm: 180,
+                difficulties: {
+                    beginner: { speed: 180, spawnInterval: 0.9, gameDuration: 60, longNoteChance: 0.18 },
+                    easy: { speed: 220, spawnInterval: 0.7, gameDuration: 60, longNoteChance: 0.22 },
+                    normal: { speed: 280, spawnInterval: 0.5, gameDuration: 60, longNoteChance: 0.28 },
+                    hard: { speed: 360, spawnInterval: 0.35, gameDuration: 60, longNoteChance: 0.35 },
+                    crazy: { speed: 450, spawnInterval: 0.25, gameDuration: 60, longNoteChance: 0.45 }
+                }
+            }
+        ];
 
-/* ===== Data ===== */
-const arena=Array.from({length:ROWS},()=>Array(COLS).fill(0));
-const pieces="ILJOTSZ";
-const colors=[null,"#00f0f0","#0000f0","#f0a000","#f0f000","#00f000","#a000f0","#f00000"];
+        // 난이도 설정 (곡별로 오버라이드됨)
+        const DIFFICULTIES = {
+            beginner: { name: '입문' },
+            easy: { name: '이지' },
+            normal: { name: '노말' },
+            hard: { name: '하드' },
+            crazy: { name: '크레이지' }
+        };
 
-let score=0, combo=0, elapsed=0;
-let baseInterval=750, dropInterval=baseInterval;
-let dropCounter=0, lastTime=0;
+        // 현재 선택된 곡
+        let currentSong = null;
 
-let holdPiece=null, canHold=true;
-let garbageTimer=0;
+        // 키 매핑 (로컬 스토리지에서 로드)
+        let KEYS = {};
+        let KEY_NAMES = ['D', 'F', 'J', 'K'];
+        let KEY_CODES = ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
 
-const player={pos:{x:0,y:0},matrix:null};
-let nextPiece=randomPiece();
+        // 키 설정 로드
+        function loadKeySettings() {
+            const saved = localStorage.getItem('rhythmGameKeys');
+            if (saved) {
+                const keys = JSON.parse(saved);
+                KEY_CODES = keys.codes || KEY_CODES;
+                KEY_NAMES = keys.names || KEY_NAMES;
+            }
+            updateKeyMapping();
+            updateKeyButtons();
+        }
 
-/* ===== Piece ===== */
-function randomPiece(){return createPiece(pieces[Math.random()*7|0]);}
-function createPiece(t){
-  return {
-    I:[[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]],
-    O:[[2,2],[2,2]],
-    T:[[0,1,0],[1,1,1],[0,0,0]],
-    S:[[0,6,6],[6,6,0],[0,0,0]],
-    Z:[[7,7,0],[0,7,7],[0,0,0]],
-    L:[[0,3,0],[0,3,0],[0,3,3]],
-    J:[[0,4,0],[0,4,0],[4,4,0]]
-  }[t];
-}
+        // 키 매핑 업데이트
+        function updateKeyMapping() {
+            KEYS = {};
+            for (let i = 0; i < KEY_CODES.length; i++) {
+                KEYS[KEY_CODES[i]] = i;
+            }
+        }
 
-/* ===== Mechanics ===== */
-function collide(){
-  return player.matrix.some((r,y)=>
-    r.some((v,x)=>
-      v && (arena[y+player.pos.y]?.[x+player.pos.x])!==0
-    )
-  );
-}
+        // 키 버튼 업데이트
+        function updateKeyButtons() {
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`keyButton${i}`).textContent = KEY_NAMES[i];
+            }
+        }
 
-function merge(){
-  player.matrix.forEach((r,y)=>
-    r.forEach((v,x)=>{
-      if(v) arena[y+player.pos.y][x+player.pos.x]=v;
-    })
-  );
-}
+        // 키 설정 저장
+        function saveKeySettings() {
+            localStorage.setItem('rhythmGameKeys', JSON.stringify({
+                codes: KEY_CODES,
+                names: KEY_NAMES
+            }));
+        }
 
-function rotate(m){
-  for(let y=0;y<m.length;y++)
-    for(let x=0;x<y;x++)
-      [m[x][y],m[y][x]]=[m[y][x],m[x][y]];
-  m.forEach(r=>r.reverse());
-}
+        // 점수 저장 (곡별)
+        function saveScore(songId, difficulty, score) {
+            const key = `rhythmGameHighScore_${songId}_${difficulty}`;
+            const current = localStorage.getItem(key);
+            if (!current || parseInt(current) < score) {
+                localStorage.setItem(key, score.toString());
+                return true;
+            }
+            return false;
+        }
 
-function wallKick(){
-  const x=player.pos.x;
-  for(let i=1;i<=3;i++){
-    player.pos.x+=i;
-    if(!collide()) return;
-    player.pos.x-=2*i;
-    if(!collide()) return;
-  }
-  player.pos.x=x;
-  rotate(player.matrix);rotate(player.matrix);rotate(player.matrix);
-}
+        // 최고 점수 로드 (곡별)
+        function loadHighScore(songId, difficulty) {
+            const key = `rhythmGameHighScore_${songId}_${difficulty}`;
+            return parseInt(localStorage.getItem(key) || '0');
+        }
 
-function sweep(){
-  let lines=0;
-  for(let y=ROWS-1;y>=0;y--){
-    if(arena[y].every(v=>v)){
-      arena.splice(y,1);
-      arena.unshift(Array(COLS).fill(0));
-      lines++;
-    }
-  }
-  if(lines){
-    combo++;
-    score+=lines*100+combo*50;
-  }else combo=0;
-}
+        // 곡 목록 표시
+        function renderSongList() {
+            const songListEl = document.getElementById('songList');
+            songListEl.innerHTML = '';
+            
+            SONGS.forEach(song => {
+                const songItem = document.createElement('div');
+                songItem.className = 'songItem';
+                if (currentSong && currentSong.id === song.id) {
+                    songItem.classList.add('selected');
+                }
+                
+                // 각 난이도별 최고 점수 찾기
+                let maxScore = 0;
+                let bestDifficulty = '';
+                Object.keys(song.difficulties).forEach(diff => {
+                    const score = loadHighScore(song.id, diff);
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestDifficulty = DIFFICULTIES[diff].name;
+                    }
+                });
+                
+                songItem.innerHTML = `
+                    <div class="songInfo">
+                        <div class="songTitle">${song.title}</div>
+                        <div class="songArtist">${song.artist}</div>
+                        <div class="songBPM">BPM: ${song.bpm}</div>
+                    </div>
+                    <div class="songScore">
+                        ${maxScore > 0 ? `<div class="songHighScore">최고: ${maxScore}</div>` : ''}
+                        ${bestDifficulty ? `<div class="songDifficulty">${bestDifficulty}</div>` : ''}
+                    </div>
+                `;
+                
+                songItem.addEventListener('click', () => {
+                    document.querySelectorAll('.songItem').forEach(item => item.classList.remove('selected'));
+                    songItem.classList.add('selected');
+                    currentSong = song;
+                });
+                
+                songListEl.appendChild(songItem);
+            });
+        }
 
-function addGarbage(){
-  const hole=Math.random()*COLS|0;
-  arena.shift();
-  arena.push(Array.from({length:COLS},(_,i)=>i===hole?0:8));
-}
+        // 곡 정보 표시
+        function updateSongInfo() {
+            const songInfoEl = document.getElementById('songInfo');
+            if (currentSong) {
+                songInfoEl.style.display = 'block';
+                songInfoEl.querySelector('.songTitle').textContent = currentSong.title;
+                songInfoEl.querySelector('.songArtist').textContent = currentSong.artist;
+                songInfoEl.querySelector('.songBPM').textContent = `BPM: ${currentSong.bpm}`;
+            } else {
+                songInfoEl.style.display = 'none';
+            }
+        }
 
-function drop(){
-  player.pos.y++;
-  if(collide()){
-    player.pos.y--;
-    merge();
-    sweep();
-    spawn();
-  }
-  dropCounter=0;
-}
+        // 게임 상태
+        let currentDifficulty = 'normal';
+        let notes = [];
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let perfectCount = 0;
+        let goodCount = 0;
+        let missCount = 0;
+        let totalNotes = 0;
+        let gameTime = 0;
+        let gameFinished = false;
+        let noteSpeed = 200;
+        let noteSpawnTimer = 0;
+        let noteSpawnInterval = 0.8;
+        let GAME_DURATION = 60;
+        let keyPressed = [false, false, false, false];
+        let judgementText = '';
+        let judgementTimer = 0;
+        let particles = [];
+        let isFullCombo = false;
+        let isPerfect = false;
+        let grade = '';
+        let gameStarted = false;
+        let waitingForKey = -1;
+        let countdownActive = false;
+        let countdownTime = 0;
+        let judgementTexts = [];
+        let judgementLines = [];
+        let hitEffects = [];
+        let currentBPM = 120;
+        let soundEnabled = true;
+        let audioContext = null;
+        let backgroundBeat = 0;
+        let previewNotes = [];
+        let judgementHistory = [];
+        let health = 100;
+        const MAX_HEALTH = 100;
+        const HEALTH_DECREASE_MISS = 3; // 미스 시 체력 감소
+        const HEALTH_DECREASE_GOOD = 0; // Good 시 체력 감소
+        const HEALTH_INCREASE_PERFECT = 1; // Perfect 시 체력 회복
 
-function hardDrop(){
-  while(!collide()) player.pos.y++;
-  player.pos.y--;
-  merge();
-  sweep();
-  spawn();
-}
+        // 롱노트 클래스
+        class LongNote {
+            constructor(lane, startY, endY, speed) {
+                this.lane = lane;
+                this.startY = startY;
+                this.endY = endY;
+                this.speed = speed;
+                this.hit = false;
+                this.missed = false;
+                this.holding = false;
+                this.startHit = false;
+                this.endHit = false;
+                this.isLongNote = true;
+                this.holdStartTime = 0; // 누르기 시작한 시간
+                this.holdScore = 0; // 누르고 있는 동안 얻은 점수
+                this.earlyRelease = false; // 조기 종료 여부
+            }
 
-function spawn(){
-  player.matrix=nextPiece;
-  nextPiece=randomPiece();
-  player.pos={x:3,y:0};
-  canHold=true;
-  if(collide()){
-    arena.forEach(r=>r.fill(0));
-    score=0; combo=0;
-  }
-}
+            update(deltaTime) {
+                if (!this.hit && !this.missed) {
+                    this.startY += this.speed * deltaTime;
+                    this.endY += this.speed * deltaTime;
+                }
+            }
 
-function hold(){
-  if(!canHold) return;
-  [holdPiece,player.matrix]=[player.matrix,holdPiece||randomPiece()];
-  player.pos={x:3,y:0};
-  canHold=false;
-}
+            checkStartHit(targetY, hitRange) {
+                const distance = Math.abs(this.startY - targetY);
+                if (distance <= hitRange * 0.3) {
+                    return 'PERFECT';
+                } else if (distance <= hitRange) {
+                    return 'GOOD';
+                }
+                return null;
+            }
 
-function ghostY(){
-  let y=player.pos.y;
-  while(!collide()) player.pos.y++;
-  const gy=player.pos.y-1;
-  player.pos.y=y;
-  return gy;
-}
+            checkEndHit(targetY, hitRange) {
+                const distance = Math.abs(this.endY - targetY);
+                if (distance <= hitRange * 0.3) {
+                    return 'PERFECT';
+                } else if (distance <= hitRange) {
+                    return 'GOOD';
+                }
+                return null;
+            }
 
-/* ===== Draw ===== */
-function drawMatrix(m,o,c,a=1){
-  c.globalAlpha=a;
-  m.forEach((r,y)=>r.forEach((v,x)=>{
-    if(v){
-      c.fillStyle=colors[v]||"#555";
-      c.fillRect(x+o.x,y+o.y,1,1);
-    }
-  }));
-  c.globalAlpha=1;
-}
+            checkMiss(targetY, missThreshold) {
+                return this.endY > targetY + missThreshold;
+            }
 
-function draw(){
-  ctx.clearRect(0,0,COLS,ROWS);
-  drawMatrix(arena,{x:0,y:0},ctx);
-  drawMatrix(player.matrix,{x:player.pos.x,y:ghostY()},ctx,0.3);
-  drawMatrix(player.matrix,player.pos,ctx);
+            isInHoldRange(targetY, hitRange) {
+                return this.startY <= targetY + hitRange && this.endY >= targetY - hitRange;
+            }
 
-  nextCtx.clearRect(0,0,4,4);
-  drawMatrix(nextPiece,{x:0,y:0},nextCtx);
+            // 현재 위치에서의 진행률 계산 (0~1)
+            // targetY를 기준으로 롱노트가 얼마나 지나갔는지 계산
+            getProgress(targetY) {
+                const startY = Math.min(this.startY, this.endY);
+                const endY = Math.max(this.startY, this.endY);
+                const totalLength = endY - startY;
+                
+                if (totalLength <= 0) return 0;
+                
+                // targetY가 롱노트의 어느 위치에 있는지 계산
+                // startY가 targetY보다 위에 있으면 진행률 0
+                // endY가 targetY보다 아래에 있으면 진행률 1
+                if (startY >= targetY) return 0;
+                if (endY <= targetY) return 1;
+                
+                const progress = (targetY - startY) / totalLength;
+                return Math.max(0, Math.min(1, progress));
+            }
+        }
 
-  holdCtx.clearRect(0,0,4,4);
-  if(holdPiece) drawMatrix(holdPiece,{x:0,y:0},holdCtx);
-}
+        // 노트 클래스
+        class Note {
+            constructor(lane, y, speed) {
+                this.lane = lane;
+                this.y = y;
+                this.speed = speed;
+                this.hit = false;
+                this.missed = false;
+                this.judgement = null;
+                this.isLongNote = false;
+            }
 
-/* ===== Loop ===== */
-function update(t=0){
-  const delta=t-lastTime; lastTime=t;
-  elapsed+=delta; dropCounter+=delta; garbageTimer+=delta;
+            update(deltaTime) {
+                if (!this.hit && !this.missed) {
+                    this.y += this.speed * deltaTime;
+                }
+            }
 
-  dropInterval=Math.min(baseInterval+Math.floor(elapsed/20000)*100,1300);
+            checkHit(targetY, hitRange) {
+                const distance = Math.abs(this.y - targetY);
+                if (distance <= hitRange * 0.3) {
+                    return 'PERFECT';
+                } else if (distance <= hitRange) {
+                    return 'GOOD';
+                }
+                return null;
+            }
 
-  if(dropCounter>dropInterval) drop();
-  if(garbageTimer>40000){ addGarbage(); garbageTimer=0; }
+            checkMiss(targetY, missThreshold) {
+                return this.y > targetY + missThreshold;
+            }
+        }
 
-  document.getElementById("time").innerText=(elapsed/1000|0)+"s";
-  document.getElementById("score").innerText=score;
-  document.getElementById("combo").innerText=combo;
+        // 레인에 노트가 있는지 체크
+        function hasNoteInLane(lane, minY, maxY) {
+            for (const note of notes) {
+                if (note.lane === lane && !note.hit && !note.missed) {
+                    if (note.isLongNote) {
+                        const longNote = note;
+                        const noteMinY = Math.min(longNote.startY, longNote.endY);
+                        const noteMaxY = Math.max(longNote.startY, longNote.endY);
+                        // 롱노트와 겹치는지 체크
+                        if (!(noteMaxY < minY || noteMinY > maxY)) {
+                            return true;
+                        }
+                    } else {
+                        // 일반 노트와 겹치는지 체크 (노트 높이 30 고려)
+                        if (note.y - 15 <= maxY && note.y + 15 >= minY) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
-  draw();
-  requestAnimationFrame(update);
-}
+        // 노트 생성
+        function spawnNote() {
+            const difficulty = DIFFICULTIES[currentDifficulty];
+            const spawnY = -50;
+            
+            // 동시에 2개 치는 노트 확률 (30%)
+            if (Math.random() < 0.3) {
+                const availableLanes = [];
+                for (let i = 0; i < LANE_COUNT; i++) {
+                    if (!hasNoteInLane(i, spawnY - 200, spawnY + 50)) {
+                        availableLanes.push(i);
+                    }
+                }
+                
+                if (availableLanes.length >= 2) {
+                    // 2개 레인 선택
+                    const shuffled = availableLanes.sort(() => Math.random() - 0.5);
+                    const lane1 = shuffled[0];
+                    const lane2 = shuffled[1];
+                    
+                    // 각 레인에 노트 생성
+                    if (Math.random() < difficulty.longNoteChance) {
+                        const length = 100 + Math.random() * 150;
+                        notes.push(new LongNote(lane1, spawnY, spawnY - length, noteSpeed));
+                        totalNotes++;
+                    } else {
+                        notes.push(new Note(lane1, spawnY, noteSpeed));
+            totalNotes++;
+        }
 
-/* ===== Controls ===== */
-document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowLeft"){player.pos.x--;if(collide())player.pos.x++;}
-  if(e.key==="ArrowRight"){player.pos.x++;if(collide())player.pos.x--;}
-  if(e.key==="ArrowDown") drop();
-  if(e.key==="ArrowUp"){rotate(player.matrix);if(collide())wallKick();}
-  if(e.code==="Space") hardDrop();
-  if(e.key==="Shift") hold();
-});
+                    if (Math.random() < difficulty.longNoteChance) {
+                        const length = 100 + Math.random() * 150;
+                        notes.push(new LongNote(lane2, spawnY, spawnY - length, noteSpeed));
+                        totalNotes++;
+                    } else {
+                        notes.push(new Note(lane2, spawnY, noteSpeed));
+                        totalNotes++;
+                    }
+                    return;
+                }
+            }
+            
+            // 단일 노트 생성
+            const availableLanes = [];
+            for (let i = 0; i < LANE_COUNT; i++) {
+                if (!hasNoteInLane(i, spawnY - 200, spawnY + 50)) {
+                    availableLanes.push(i);
+                }
+            }
+            
+            if (availableLanes.length === 0) return; // 모든 레인이 사용 중
+            
+            const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+            
+            // 롱노트 생성 확률
+            if (Math.random() < difficulty.longNoteChance) {
+                const length = 100 + Math.random() * 150;
+                const endY = spawnY - length;
+                notes.push(new LongNote(lane, spawnY, endY, noteSpeed));
+                totalNotes++;
+            } else {
+                notes.push(new Note(lane, spawnY, noteSpeed));
+                totalNotes++;
+            }
+        }
 
-spawn();
-update();
-</script>
+        // 체력 업데이트
+        function updateHealth(change) {
+            health = Math.max(0, Math.min(MAX_HEALTH, health + change));
+            const healthPercent = (health / MAX_HEALTH) * 100;
+            document.getElementById('healthFill').style.width = `${healthPercent}%`;
+            document.getElementById('healthText').textContent = `체력: ${Math.floor(healthPercent)}%`;
+            
+            // 체력이 0이 되면 게임 오버
+            if (health <= 0 && !gameFinished) {
+                gameFinished = true;
+                showResultScreen();
+            }
+        }
+
+        // 판정 적용 (EARLY/LATE 포함)
+        function applyJudgement(judgement, noteY = null, lane = null, timing = null) {
+            if (judgement === 'PERFECT') {
+                score += 100;
+                combo++;
+                perfectCount++;
+                updateHealth(HEALTH_INCREASE_PERFECT); // Perfect 시 체력 회복
+                showJudgement('PERFECT!', 'perfect', noteY, lane);
+                if (combo >= 10 && combo % 10 === 0) {
+                    createSpecialEffect('PERFECT COMBO!');
+                }
+            } else if (judgement === 'GOOD') {
+                score += 50;
+                combo++;
+                goodCount++;
+                updateHealth(-HEALTH_DECREASE_GOOD); // Good 시 체력 감소
+                showJudgement('GOOD', 'good', noteY, lane);
+            } else {
+                combo = 0;
+                missCount++;
+                updateHealth(-HEALTH_DECREASE_MISS); // Miss 시 체력 대폭 감소
+                showJudgement('MISS', 'miss', noteY, lane);
+            }
+
+            // EARLY/LATE 표시
+            if (timing && timing !== 'PERFECT') {
+                const indicator = document.createElement('div');
+                indicator.className = `timingIndicator ${timing.toLowerCase()}`;
+                indicator.textContent = timing;
+                indicator.style.top = `${HIT_LINE_Y - 30}px`;
+                document.getElementById('ui').appendChild(indicator);
+                
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.parentNode.removeChild(indicator);
+                    }
+                }, 1000);
+            }
+
+            // 히트 이펙트 생성
+            if (lane !== null) {
+                createHitEffect(lane);
+            }
+
+            if (combo > maxCombo) {
+                maxCombo = combo;
+            }
+
+            updateUI();
+        }
+
+        // 히트 이펙트 생성
+        function createHitEffect(lane) {
+            const x = (lane + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+            const colors = ['#64c8ff', '#ff64ff', '#ffc864', '#64ff64'];
+            
+            for (let i = 0; i < 15; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 3;
+                particles.push({
+                    x: x,
+                    y: HIT_LINE_Y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    color: colors[lane] || '#ffffff'
+                });
+            }
+        }
+
+        // 사운드 생성
+        function createSound(frequency, duration, type) {
+            if (!soundEnabled || !audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type || 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                // 사운드 생성 실패 무시
+            }
+        }
+
+        // 판정 사운드
+        function playJudgementSound(judgement) {
+            if (judgement === 'PERFECT') {
+                createSound(800, 0.1, 'sine');
+            } else if (judgement === 'GOOD') {
+                createSound(600, 0.1, 'sine');
+            } else if (judgement === 'MISS') {
+                createSound(200, 0.2, 'sawtooth');
+            }
+        }
+
+        // 판정 표시 (개선된 애니메이션)
+        function showJudgement(text, type, noteY = null, lane = null) {
+            // 기존 방식도 유지
+            const judgementEl = document.getElementById('judgement');
+            judgementEl.textContent = text;
+            judgementEl.className = type;
+            judgementEl.style.display = 'block';
+            judgementTimer = 0.5;
+
+            // 새로운 애니메이션 텍스트 생성
+            const newText = document.createElement('div');
+            newText.className = `judgementText ${type}`;
+            newText.textContent = text;
+            newText.style.top = '50%';
+            newText.style.left = '50%';
+            document.getElementById('ui').appendChild(newText);
+            
+            setTimeout(() => {
+                if (newText.parentNode) {
+                    newText.parentNode.removeChild(newText);
+                }
+            }, 1000);
+
+            // 판정 히스토리에 추가
+            judgementHistory.push({ type, time: Date.now() });
+            updateJudgementHistory();
+
+            // 판정 라인 표시
+            if (noteY !== null && lane !== null) {
+                const x = (lane + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+                const line = document.createElement('div');
+                line.className = `judgementLine ${type}`;
+                line.style.left = `${x - 2}px`;
+                line.style.top = `${noteY}px`;
+                line.style.color = type === 'perfect' ? '#ffff64' : type === 'good' ? '#64ff64' : '#ff6464';
+                document.getElementById('ui').appendChild(line);
+                
+                setTimeout(() => {
+                    if (line.parentNode) {
+                        line.parentNode.removeChild(line);
+                    }
+                }, 2000);
+            }
+
+            // 사운드 재생
+            playJudgementSound(type.toUpperCase());
+        }
+
+        // 판정 히스토리 업데이트
+        function updateJudgementHistory() {
+            const historyEl = document.getElementById('judgementHistory');
+            historyEl.innerHTML = '';
+            
+            // 최근 10개만 표시
+            const recent = judgementHistory.slice(-10);
+            recent.forEach(judgement => {
+                const icon = document.createElement('div');
+                icon.className = `judgementIcon ${judgement.type}`;
+                historyEl.appendChild(icon);
+            });
+        }
+
+        // 노트 히트 시도
+        function tryHitNote(lane) {
+            let closestNote = null;
+            let closestDistance = Infinity;
+
+            for (const note of notes) {
+                if (note.lane === lane && !note.hit && !note.missed) {
+                    if (note.isLongNote) {
+                        const longNote = note;
+                        if (!longNote.startHit) {
+                            const distance = Math.abs(longNote.startY - HIT_LINE_Y);
+                            if (distance < closestDistance) {
+                                closestDistance = distance;
+                                closestNote = note;
+                            }
+                        }
+                    } else {
+                    const distance = Math.abs(note.y - HIT_LINE_Y);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestNote = note;
+                        }
+                    }
+                }
+            }
+
+            if (closestNote) {
+                if (closestNote.isLongNote) {
+                    const longNote = closestNote;
+                    if (!longNote.startHit) {
+                        const judgement = longNote.checkStartHit(HIT_LINE_Y, HIT_RANGE);
+                        if (judgement) {
+                            longNote.startHit = true;
+                            longNote.holding = true;
+                            longNote.holdStartTime = gameTime;
+                            const timing = getTiming(longNote.startY, HIT_LINE_Y);
+                            applyJudgement(judgement, longNote.startY, lane, timing);
+                        }
+                    }
+                } else {
+                const judgement = closestNote.checkHit(HIT_LINE_Y, HIT_RANGE);
+                    const timing = getTiming(closestNote.y, HIT_LINE_Y);
+                if (judgement) {
+                    closestNote.hit = true;
+                    closestNote.judgement = judgement;
+                        applyJudgement(judgement, closestNote.y, lane, timing);
+                } else if (closestDistance < HIT_RANGE * 1.5) {
+                    closestNote.hit = true;
+                    closestNote.judgement = 'GOOD';
+                        applyJudgement('GOOD', closestNote.y, lane, timing);
+                    }
+                }
+            }
+        }
+
+        // 타이밍 판정 (EARLY/LATE)
+        function getTiming(noteY, targetY) {
+            const distance = noteY - targetY;
+            if (Math.abs(distance) <= HIT_RANGE * 0.3) {
+                return 'PERFECT';
+            } else if (distance < 0) {
+                return 'EARLY';
+            } else {
+                return 'LATE';
+            }
+        }
+
+        // 롱노트 종료 체크
+        function checkLongNoteEnd(lane) {
+            for (const note of notes) {
+                if (note.isLongNote && note.lane === lane && note.startHit && !note.endHit && !note.missed) {
+                    const longNote = note;
+                    longNote.holding = false;
+                    
+                    // 조기 종료인지 체크 (끝점이 히트라인을 아직 지나지 않았을 때)
+                    const endDistance = Math.abs(longNote.endY - HIT_LINE_Y);
+                    if (longNote.endY < HIT_LINE_Y && endDistance > HIT_RANGE) {
+                        // 조기 종료 - 땐 시점의 점수 부여 (미스 아님)
+                        longNote.earlyRelease = true;
+                        const progress = longNote.getProgress(HIT_LINE_Y);
+                        const holdTime = gameTime - longNote.holdStartTime;
+                        
+                        // 이미 누르고 있는 동안 얻은 점수는 holdScore에 있음
+                        // 추가로 진행률에 따른 보너스 점수 부여
+                        const progressBonus = Math.floor(progress * 50); // 최대 50점
+                        score += progressBonus;
+                        
+                        longNote.endHit = true;
+                        longNote.hit = true;
+                        // 조기 종료는 미스가 아니므로 combo 유지
+                        updateUI();
+                    } else {
+                        // 정상 종료 또는 끝점 판정
+                        const judgement = longNote.checkEndHit(HIT_LINE_Y, HIT_RANGE);
+                        const timing = getTiming(longNote.endY, HIT_LINE_Y);
+                        if (judgement) {
+                            longNote.endHit = true;
+                            longNote.hit = true;
+                            applyJudgement(judgement, longNote.endY, lane, timing);
+                        } else if (longNote.endY > HIT_LINE_Y + MISS_THRESHOLD) {
+                            // 끝점을 놓쳤을 때만 미스
+                            longNote.missed = true;
+                            longNote.hit = true;
+                            combo = 0;
+                            missCount++;
+                            showJudgement('MISS', 'miss', longNote.endY, lane);
+                            updateUI();
+                        }
+                    }
+                }
+            }
+        }
+
+        // 특수 이펙트 생성
+        function createSpecialEffect(text) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 3 + 2;
+                particles.push({
+                    x: centerX,
+                    y: centerY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    color: `rgb(${200 + Math.random() * 55}, ${200 + Math.random() * 55}, ${100 + Math.random() * 155})`
+                });
+            }
+
+            showJudgement(text, 'perfect');
+        }
+
+        // 등급 계산
+        function calculateGrade() {
+            if (totalNotes === 0) return 'F';
+
+            const accuracy = (perfectCount + goodCount) / totalNotes;
+            const perfectRatio = perfectCount / totalNotes;
+
+            if (isPerfect) {
+                return 'SS';
+            } else if (isFullCombo && perfectRatio >= 0.9) {
+                return 'S';
+            } else if (isFullCombo) {
+                return 'A';
+            } else if (accuracy >= 0.95 && perfectRatio >= 0.8) {
+                return 'A';
+            } else if (accuracy >= 0.9) {
+                return 'B';
+            } else if (accuracy >= 0.8) {
+                return 'C';
+            } else if (accuracy >= 0.7) {
+                return 'D';
+            } else {
+                return 'F';
+            }
+        }
+
+        // 업적 체크
+        function checkAchievements() {
+            isFullCombo = (missCount === 0 && totalNotes > 0);
+            isPerfect = (missCount === 0 && goodCount === 0 && totalNotes > 0);
+        }
+
+        // 카운트다운 시작
+        function startCountdown() {
+            countdownActive = true;
+            countdownTime = 0;
+            const countdownEl = document.getElementById('countdown');
+            countdownEl.style.display = 'block';
+            
+            const countdownSequence = [3, 2, 1, 'GO!'];
+            let index = 0;
+            
+            function showCountdown() {
+                if (index < countdownSequence.length) {
+                    countdownEl.textContent = countdownSequence[index];
+                    countdownEl.style.color = index === countdownSequence.length - 1 ? '#64ff64' : '#ffc864';
+                    if (soundEnabled && audioContext) {
+                        createSound(400 + index * 100, 0.1, 'sine');
+                    }
+                    index++;
+                    setTimeout(showCountdown, 1000);
+                } else {
+                    countdownEl.style.display = 'none';
+                    countdownActive = false;
+                    gameStarted = true;
+                }
+            }
+            
+            showCountdown();
+        }
+
+        // 게임 초기화
+        function initGame(difficulty) {
+            if (!currentSong) {
+                alert('곡을 먼저 선택해주세요!');
+                return;
+            }
+            
+            currentDifficulty = difficulty;
+            const songDiff = currentSong.difficulties[difficulty];
+            noteSpeed = songDiff.speed;
+            noteSpawnInterval = songDiff.spawnInterval;
+            GAME_DURATION = songDiff.gameDuration;
+            currentBPM = currentSong.bpm;
+            resetGame();
+            startCountdown();
+        }
+
+        // 게임 재시작
+        function resetGame() {
+            notes = [];
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            perfectCount = 0;
+            goodCount = 0;
+            missCount = 0;
+            totalNotes = 0;
+            gameTime = 0;
+            gameFinished = false;
+            noteSpawnTimer = 0;
+            particles = [];
+            judgementText = '';
+            judgementTimer = 0;
+            isFullCombo = false;
+            isPerfect = false;
+            grade = '';
+            gameStarted = false;
+            countdownActive = false;
+            countdownTime = 0;
+            judgementHistory = [];
+            previewNotes = [];
+            health = MAX_HEALTH;
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('judgementHistory').innerHTML = '';
+            updateHealth(0); // 체력바 초기화
+            updateUI();
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+            const comboEl = document.getElementById('combo');
+            if (combo > 0) {
+                comboEl.textContent = `${combo} COMBO!`;
+                comboEl.style.display = 'block';
+            } else {
+                comboEl.style.display = 'none';
+            }
+            document.getElementById('perfectCount').textContent = perfectCount;
+            document.getElementById('goodCount').textContent = goodCount;
+            document.getElementById('missCount').textContent = missCount;
+            document.getElementById('speed').textContent = `Speed: ${Math.floor(noteSpeed)}`;
+            document.getElementById('bpm').textContent = `BPM: ${currentBPM}`;
+        }
+
+        // 결과 화면 표시
+        function showResultScreen() {
+            checkAchievements();
+            grade = calculateGrade();
+
+            if (isPerfect) {
+                createSpecialEffect('PERFECT!');
+            } else if (isFullCombo) {
+                createSpecialEffect('FULL COMBO!');
+            }
+
+            const resultScreen = document.getElementById('resultScreen');
+            const gradeEl = document.getElementById('grade');
+            gradeEl.textContent = grade;
+            gradeEl.className = grade.toLowerCase();
+
+            const achievementEl = document.getElementById('achievement');
+            if (isPerfect) {
+                achievementEl.textContent = 'PERFECT!';
+                achievementEl.className = 'perfect';
+                achievementEl.style.display = 'block';
+            } else if (isFullCombo) {
+                achievementEl.textContent = 'FULL COMBO!';
+                achievementEl.className = 'fullcombo';
+                achievementEl.style.display = 'block';
+            } else {
+                achievementEl.style.display = 'none';
+            }
+
+            const accuracy = totalNotes > 0 ? ((perfectCount + goodCount) / totalNotes * 100).toFixed(1) : 0;
+            const songId = currentSong ? currentSong.id : 'default';
+            const highScore = loadHighScore(songId, currentDifficulty);
+            const isNewRecord = saveScore(songId, currentDifficulty, score);
+            const gameOverReason = health <= 0 ? '<div style="color: #ff6464; font-size: 24px; margin-bottom: 10px;">체력 소진으로 게임 오버!</div>' : '';
+            document.getElementById('resultStats').innerHTML = `
+                ${gameOverReason}
+                ${currentSong ? `<div style="font-size: 20px; margin-bottom: 10px; color: #ffc864;">${currentSong.title} - ${currentSong.artist}</div>` : ''}
+                <div>Score: ${score} ${isNewRecord ? '(신기록!)' : ''}</div>
+                <div>최고 점수: ${highScore}</div>
+                <div>Perfect: ${perfectCount}</div>
+                <div>Good: ${goodCount}</div>
+                <div>Miss: ${missCount}</div>
+                <div>Max Combo: ${maxCombo}</div>
+                <div>Total Notes: ${totalNotes}</div>
+                <div>Accuracy: ${accuracy}%</div>
+                <div>최종 체력: ${Math.floor((health / MAX_HEALTH) * 100)}%</div>
+            `;
+
+            // 판정 통계 그래프
+            updateJudgementGraph();
+
+            resultScreen.style.display = 'flex';
+        }
+
+        // 판정 통계 그래프 업데이트
+        function updateJudgementGraph() {
+            const graphEl = document.getElementById('judgementGraph');
+            graphEl.innerHTML = '';
+            
+            if (totalNotes === 0) return;
+            
+            const maxHeight = 140;
+            const perfectHeight = (perfectCount / totalNotes) * maxHeight;
+            const goodHeight = (goodCount / totalNotes) * maxHeight;
+            const missHeight = (missCount / totalNotes) * maxHeight;
+            
+            const perfectBar = document.createElement('div');
+            perfectBar.className = 'graphBar perfect';
+            perfectBar.style.height = `${perfectHeight}px`;
+            graphEl.appendChild(perfectBar);
+            
+            const goodBar = document.createElement('div');
+            goodBar.className = 'graphBar good';
+            goodBar.style.height = `${goodHeight}px`;
+            graphEl.appendChild(goodBar);
+            
+            const missBar = document.createElement('div');
+            missBar.className = 'graphBar miss';
+            missBar.style.height = `${missHeight}px`;
+            graphEl.appendChild(missBar);
+        }
+
+        // 렌더링
+        function render() {
+            // 배경 (단순한 배경으로 변경)
+            ctx.fillStyle = '#141428';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameFinished || !gameStarted || countdownActive) {
+                return;
+            }
+
+            // 레인 그리기
+            for (let i = 0; i < LANE_COUNT; i++) {
+                const x = (i + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+
+                // 레인 배경
+                ctx.fillStyle = '#282828';
+                ctx.fillRect(x - LANE_WIDTH / 2 + 10, 0, LANE_WIDTH - 20, canvas.height);
+
+                // 키 표시
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '36px "Malgun Gothic", "맑은 고딕", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(KEY_NAMES[i], x, HIT_LINE_Y + 30);
+
+                // 키가 눌렸을 때 하이라이트
+                if (keyPressed[i]) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(x - LANE_WIDTH / 2 + 10, HIT_LINE_Y - 20, LANE_WIDTH - 20, 40);
+                }
+            }
+
+            // 히트 라인
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(LANE_WIDTH, HIT_LINE_Y);
+            ctx.lineTo(canvas.width - LANE_WIDTH, HIT_LINE_Y);
+            ctx.stroke();
+
+            // 노트 그리기 (롱노트를 먼저 그려서 일반 노트가 위에 오도록)
+            const normalNotes = [];
+            const longNotes = [];
+            
+            for (const note of notes) {
+                if (note.hit && !note.isLongNote) continue;
+                if (note.missed && !note.isLongNote) continue;
+                
+                if (note.isLongNote) {
+                    longNotes.push(note);
+                } else {
+                    normalNotes.push(note);
+                }
+            }
+            
+            // 롱노트 먼저 그리기
+            for (const longNote of longNotes) {
+                if (longNote.missed) continue;
+                
+                const x = (longNote.lane + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+                const startY = Math.min(longNote.startY, longNote.endY);
+                const endY = Math.max(longNote.startY, longNote.endY);
+                const height = endY - startY;
+                
+                // 롱노트 본체 (그라데이션 효과)
+                if (longNote.startHit && longNote.holding) {
+                    // 누르고 있는 중 - 밝은 보라색
+                    const gradient = ctx.createLinearGradient(x - 30, startY, x - 30, endY);
+                    gradient.addColorStop(0, '#ff64ff');
+                    gradient.addColorStop(0.5, '#ff96ff');
+                    gradient.addColorStop(1, '#ff64ff');
+                    ctx.fillStyle = gradient;
+                } else {
+                    // 아직 누르지 않음 - 주황색
+                    const gradient = ctx.createLinearGradient(x - 30, startY, x - 30, endY);
+                    gradient.addColorStop(0, '#ffc864');
+                    gradient.addColorStop(0.5, '#ffd896');
+                    gradient.addColorStop(1, '#ffc864');
+                    ctx.fillStyle = gradient;
+                }
+                
+                // 둥근 모서리 효과를 위한 패스
+                const radius = 8;
+                ctx.beginPath();
+                ctx.moveTo(x - 25 + radius, startY);
+                ctx.lineTo(x + 25 - radius, startY);
+                ctx.quadraticCurveTo(x + 25, startY, x + 25, startY + radius);
+                ctx.lineTo(x + 25, endY - radius);
+                ctx.quadraticCurveTo(x + 25, endY, x + 25 - radius, endY);
+                ctx.lineTo(x - 25 + radius, endY);
+                ctx.quadraticCurveTo(x - 25, endY, x - 25, endY - radius);
+                ctx.lineTo(x - 25, startY + radius);
+                ctx.quadraticCurveTo(x - 25, startY, x - 25 + radius, startY);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 테두리
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 시작점 표시 (원형)
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x, startY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 끝점 표시 (원형)
+                ctx.beginPath();
+                ctx.arc(x, endY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // 누르고 있는 중일 때 진행 표시
+                if (longNote.startHit && longNote.holding) {
+                    // 히트라인까지의 진행률 표시
+                    const progress = longNote.getProgress(HIT_LINE_Y);
+                    const progressY = startY + (endY - startY) * progress;
+                    
+                    // 진행 바 (반투명 흰색)
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.fillRect(x - 27, startY, 54, Math.max(0, progressY - startY));
+                    
+                    // 진행률 표시선
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x - 30, progressY);
+                    ctx.lineTo(x + 30, progressY);
+                    ctx.stroke();
+                }
+            }
+            
+            // 일반 노트 그리기
+            for (const note of normalNotes) {
+                const x = (note.lane + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+                
+                if (note.missed) {
+                    ctx.fillStyle = '#ff6464';
+                } else {
+                    ctx.fillStyle = '#64c8ff';
+                }
+                
+                // 둥근 모서리
+                const radius = 5;
+                ctx.beginPath();
+                ctx.moveTo(x - 20 + radius, note.y - 15);
+                ctx.lineTo(x + 20 - radius, note.y - 15);
+                ctx.quadraticCurveTo(x + 20, note.y - 15, x + 20, note.y - 15 + radius);
+                ctx.lineTo(x + 20, note.y + 15 - radius);
+                ctx.quadraticCurveTo(x + 20, note.y + 15, x + 20 - radius, note.y + 15);
+                ctx.lineTo(x - 20 + radius, note.y + 15);
+                ctx.quadraticCurveTo(x - 20, note.y + 15, x - 20, note.y + 15 - radius);
+                ctx.lineTo(x - 20, note.y - 15 + radius);
+                ctx.quadraticCurveTo(x - 20, note.y - 15, x - 20 + radius, note.y - 15);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // 파티클 렌더링
+            for (const particle of particles) {
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // 노트 프리뷰 그리기
+            drawNotePreview();
+
+            // 시간 표시
+            const timeLeft = Math.max(0, GAME_DURATION - gameTime);
+            document.getElementById('time').textContent = `Time: ${timeLeft.toFixed(1)}s`;
+        }
+
+        // 노트 프리뷰 그리기
+        function drawNotePreview() {
+            const previewY = HIT_LINE_Y - 200; // 히트라인 위 200px
+            const previewLanes = new Set();
+            
+            // 다음에 올 노트들 찾기
+            for (const note of notes) {
+                if (note.y < previewY + 50 && note.y > previewY - 50 && !note.hit && !note.missed) {
+                    previewLanes.add(note.lane);
+                }
+            }
+            
+            // 프리뷰 표시
+            previewLanes.forEach(lane => {
+                const x = (lane + 1) * LANE_WIDTH + LANE_WIDTH / 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(x - 15, previewY - 10);
+                ctx.lineTo(x + 15, previewY - 10);
+                ctx.lineTo(x + 15, previewY + 10);
+                ctx.lineTo(x - 15, previewY + 10);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+        }
+
+        // 업데이트
+        function update(deltaTime) {
+            if (gameFinished || !gameStarted || countdownActive) {
+                // 파티클만 업데이트
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= deltaTime * 0.5;
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+                return;
+            }
+
+            gameTime += deltaTime;
+
+            // 게임 종료 체크
+            if (gameTime >= GAME_DURATION && !gameFinished) {
+                gameFinished = true;
+                showResultScreen();
+            }
+
+            // 노트 생성
+            noteSpawnTimer += deltaTime;
+            if (noteSpawnTimer >= noteSpawnInterval) {
+                noteSpawnTimer = 0;
+                spawnNote();
+            }
+
+            // 노트 업데이트
+            for (const note of notes) {
+                note.update(deltaTime);
+
+                if (!note.hit && !note.missed) {
+                    if (note.isLongNote) {
+                        const longNote = note;
+                        if (!longNote.startHit && longNote.checkMiss(HIT_LINE_Y, MISS_THRESHOLD)) {
+                            longNote.missed = true;
+                            combo = 0;
+                            missCount++;
+                            updateHealth(-HEALTH_DECREASE_MISS);
+                            showJudgement('MISS', 'miss', longNote.startY, note.lane);
+                            updateUI();
+                        } else if (longNote.startHit && !longNote.endHit && longNote.checkMiss(HIT_LINE_Y, MISS_THRESHOLD)) {
+                            longNote.missed = true;
+                            longNote.holding = false;
+                            combo = 0;
+                            missCount++;
+                            updateHealth(-HEALTH_DECREASE_MISS);
+                            showJudgement('MISS', 'miss', longNote.endY, note.lane);
+                            updateUI();
+                        }
+                    } else {
+                    if (note.checkMiss(HIT_LINE_Y, MISS_THRESHOLD)) {
+                        note.missed = true;
+                        note.judgement = 'MISS';
+                        combo = 0;
+                        missCount++;
+                            updateHealth(-HEALTH_DECREASE_MISS);
+                            showJudgement('MISS', 'miss', note.y, note.lane);
+                        updateUI();
+                        }
+                    }
+                }
+            }
+
+            // 화면 밖으로 나간 노트 제거
+            notes = notes.filter(note => {
+                if (note.isLongNote) {
+                    return !note.hit && note.endY < canvas.height + 100;
+                } else {
+                    return !note.hit && note.y < canvas.height + 100;
+                }
+            });
+
+            // 롱노트 유지 중 점수 (누르고 있는 동안 지속적으로 점수 부여)
+            for (const note of notes) {
+                if (note.isLongNote && note.startHit && !note.endHit && note.holding) {
+                    const longNote = note;
+                    if (longNote.isInHoldRange(HIT_LINE_Y, HIT_RANGE)) {
+                        // 누른 시간에 비례하여 점수 부여 (초당 20점)
+                        const holdTime = gameTime - longNote.holdStartTime;
+                        const scoreToAdd = Math.floor(deltaTime * 20);
+                        score += scoreToAdd;
+                        longNote.holdScore += scoreToAdd;
+                        updateUI();
+                    }
+                }
+            }
+
+            // 파티클 업데이트
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= deltaTime * 0.5;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // 판정 텍스트 타이머
+            if (judgementTimer > 0) {
+                judgementTimer -= deltaTime;
+                if (judgementTimer <= 0) {
+                    document.getElementById('judgement').style.display = 'none';
+                }
+            }
+        }
+
+        // 이벤트 리스너
+        document.addEventListener('keydown', (e) => {
+            if (waitingForKey >= 0) {
+                // 키 설정 중
+                if (e.code.startsWith('Key')) {
+                    KEY_CODES[waitingForKey] = e.code;
+                    KEY_NAMES[waitingForKey] = e.code.replace('Key', '');
+                    updateKeyMapping();
+                    updateKeyButtons();
+                    saveKeySettings();
+                    document.getElementById(`keyButton${waitingForKey}`).classList.remove('waiting');
+                    waitingForKey = -1;
+                }
+                return;
+            }
+
+            if (e.code === 'Escape') {
+                if (document.getElementById('settingsScreen').style.display === 'flex') {
+                    document.getElementById('settingsScreen').style.display = 'none';
+                    document.getElementById('mainMenu').style.display = 'flex';
+                    return;
+                }
+                if (gameFinished) {
+                    document.getElementById('resultScreen').style.display = 'none';
+                    document.getElementById('mainMenu').style.display = 'flex';
+                    return;
+                }
+                if (gameStarted) {
+                    gameFinished = true;
+                    showResultScreen();
+                }
+                return;
+            }
+
+            if (gameFinished || !gameStarted) return;
+
+            if (KEYS.hasOwnProperty(e.code)) {
+                const lane = KEYS[e.code];
+                keyPressed[lane] = true;
+                tryHitNote(lane);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (gameFinished || !gameStarted) return;
+            if (KEYS.hasOwnProperty(e.code)) {
+                const lane = KEYS[e.code];
+                keyPressed[lane] = false;
+                checkLongNoteEnd(lane);
+                
+                // 롱노트를 놓았을 때 체크는 checkLongNoteEnd에서 처리됨
+            }
+        });
+
+        // 메인 메뉴 이벤트
+        document.querySelectorAll('.difficultyButton').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.difficultyButton').forEach(b => b.classList.remove('selected'));
+                button.classList.add('selected');
+                currentDifficulty = button.dataset.difficulty;
+                if (currentSong) {
+                    const highScore = loadHighScore(currentSong.id, currentDifficulty);
+                    document.getElementById('highScore').textContent = `최고 점수: ${highScore}`;
+                } else {
+                    document.getElementById('highScore').textContent = '곡을 선택해주세요';
+                }
+            });
+        });
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            if (!currentDifficulty) {
+                currentDifficulty = 'normal';
+            }
+            initGame(currentDifficulty);
+            gameStarted = true;
+            document.getElementById('mainMenu').style.display = 'none';
+        });
+
+        document.getElementById('settingsButton').addEventListener('click', () => {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('settingsScreen').style.display = 'flex';
+        });
+
+        document.getElementById('backToMenuButton').addEventListener('click', () => {
+            document.getElementById('settingsScreen').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+        });
+
+        // 키 설정 버튼 이벤트
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`keyButton${i}`).addEventListener('click', () => {
+                if (waitingForKey >= 0) {
+                    document.getElementById(`keyButton${waitingForKey}`).classList.remove('waiting');
+                }
+                waitingForKey = i;
+                document.getElementById(`keyButton${i}`).classList.add('waiting');
+                document.getElementById(`keyButton${i}`).textContent = '키를 누르세요...';
+            });
+        }
+
+        document.getElementById('restartButton').addEventListener('click', () => {
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+        });
+
+        // 곡 선택 화면 이벤트
+        document.getElementById('selectSongMenuButton').addEventListener('click', () => {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('songSelection').style.display = 'flex';
+            renderSongList();
+        });
+
+        document.getElementById('selectSongButton').addEventListener('click', () => {
+            if (!currentSong) {
+                alert('곡을 선택해주세요!');
+                return;
+            }
+            document.getElementById('songSelection').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+            updateSongInfo();
+            // 난이도 선택 초기화
+            document.querySelector('.difficultyButton[data-difficulty="normal"]').click();
+        });
+
+        document.getElementById('backToMainFromSong').addEventListener('click', () => {
+            document.getElementById('songSelection').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+        });
+
+        // 게임 루프
+        let lastTime = performance.now();
+        function gameLoop(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            update(deltaTime);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 속도 슬라이더 이벤트
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            noteSpeed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = noteSpeed;
+            if (gameStarted && !gameFinished) {
+                // 게임 중에는 모든 노트의 속도 업데이트
+                notes.forEach(note => {
+                    note.speed = noteSpeed;
+                });
+            }
+        });
+
+        // 사운드 토글 이벤트
+        document.getElementById('soundToggle').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            const toggle = document.getElementById('soundToggle');
+            if (soundEnabled) {
+                toggle.classList.add('active');
+                // AudioContext 초기화
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('AudioContext not supported');
+                }
+            } else {
+                toggle.classList.remove('active');
+            }
+            localStorage.setItem('rhythmGameSound', soundEnabled.toString());
+        });
+
+        // 사운드 설정 로드
+        const savedSound = localStorage.getItem('rhythmGameSound');
+        if (savedSound !== null) {
+            soundEnabled = savedSound === 'true';
+            if (soundEnabled) {
+                document.getElementById('soundToggle').classList.add('active');
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('AudioContext not supported');
+                }
+            }
+        } else {
+            // 기본값으로 AudioContext 초기화 시도
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('AudioContext not supported');
+            }
+        }
+
+        // 초기화
+        loadKeySettings();
+        document.querySelector('.difficultyButton[data-difficulty="normal"]').classList.add('selected');
+        currentDifficulty = 'normal';
+        document.getElementById('highScore').textContent = '곡을 선택해주세요';
+        document.getElementById('speedValue').textContent = noteSpeed;
+        updateUI();
+        renderSongList();
+        gameLoop(performance.now());
+    </script>
 </body>
 </html>
