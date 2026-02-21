@@ -1,178 +1,337 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Speed Quiz Tool</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    margin: 0;
-  }
-
-  /* 카톡 아이콘 */
-  #kakaoBtn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 64px;
-    height: 64px;
-    background: #fee500;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 1000;
-  }
-
-  /* 모달 */
-  #quizModal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-  }
-
-  .quiz-box {
-    background: white;
-    width: 320px;
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-  }
-
-  h2 {
-    margin-top: 0;
-  }
-
-  button {
-    padding: 10px 14px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: #222;
-    color: white;
-  }
-
-  .option {
-    background: #eee;
-    margin: 8px 0;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  .option:hover {
-    background: #ddd;
-  }
-
-  .hidden {
-    display: none;
-  }
+:root{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --accent:#38bdf8;
+  --text:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Pretendard,Arial,sans-serif;
+  background:linear-gradient(135deg,#0f172a,#020617);
+  color:var(--text);
+}
+.hidden{display:none}
+button{
+  background:var(--accent);
+  border:none;
+  border-radius:12px;
+  padding:12px 18px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+button.secondary{background:#475569}
+input,textarea{
+  width:100%;
+  background:#020617;
+  color:white;
+  border:1px solid #334155;
+  border-radius:8px;
+  padding:8px;
+}
+textarea{min-height:80px}
+.page{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.card{
+  width:100%;
+  max-width:500px;
+  background:var(--card);
+  border-radius:16px;
+  padding:20px;
+  margin:10px 0;
+}
+h1,h2,h3{text-align:center;margin:10px 0}
+.flex{display:flex;gap:10px;flex-wrap:wrap}
+.space{justify-content:space-between}
+.center{justify-content:center}
+.group-btn{
+  background:#334155;
+  padding:14px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:700;
+}
+.big-word{
+  font-size:48px;
+  font-weight:900;
+  margin:40px 0;
+  text-align:center;
+}
+.counter{
+  font-size:18px;
+  font-weight:700;
+}
+.rank1{color:#facc15}
+.rank2{color:#e5e7eb}
+.rank3{color:#fb7185}
 </style>
 </head>
-
 <body>
 
-<!-- 카카오톡 버튼 -->
-<div id="kakaoBtn">QUIZ</div>
+<!-- MAIN -->
+<div id="main" class="page">
+  <div class="card">
+    <h1>⚡ Speed Quiz Tool</h1>
+    <button onclick="go('list')">플레이</button>
+  </div>
+</div>
 
-<!-- 퀴즈 모달 -->
-<div id="quizModal">
-  <div class="quiz-box">
-    <h2 id="title">Speed Quiz</h2>
-
-    <div id="startScreen">
-      <p>60초 안에 최대한 많이 맞히세요!</p>
-      <button onclick="startGame()">시작</button>
-    </div>
-
-    <div id="gameScreen" class="hidden">
-      <p>⏱ <span id="time">60</span>초</p>
-      <p id="question"></p>
-      <div id="options"></div>
-    </div>
-
-    <div id="resultScreen" class="hidden">
-      <h3>결과</h3>
-      <p>점수: <span id="score"></span></p>
-      <button onclick="resetGame()">다시 하기</button>
+<!-- LIST -->
+<div id="list" class="page hidden">
+  <div class="card">
+    <h2>퀴즈 목록</h2>
+    <div id="quizList"></div>
+    <div class="flex center">
+      <button onclick="createQuiz()">+ 생성</button>
+      <button class="secondary" onclick="go('main')">뒤로</button>
     </div>
   </div>
 </div>
 
+<!-- ADMIN -->
+<div id="admin" class="page hidden">
+  <div class="card">
+    <h2>퀴즈 설정</h2>
+    <input id="qTitle" placeholder="퀴즈 제목">
+
+    <p>그룹 수</p>
+    <input type="number" id="groupCount" min="1" max="10" value="3">
+
+    <p>그룹당 단어 수</p>
+    <input type="number" id="wordCount" min="1" max="40" value="10">
+
+    <p>제한 시간 (초)</p>
+    <input type="number" id="timeLimit" value="60">
+
+    <p>패스 횟수</p>
+    <input type="number" id="passLimit" value="3">
+
+    <div id="groupInputs"></div>
+
+    <div class="flex center">
+      <button onclick="saveQuiz()">저장</button>
+      <button class="secondary" onclick="go('list')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP SELECT -->
+<div id="groupSelect" class="page hidden">
+  <div class="card">
+    <h2 id="groupSentence"></h2>
+    <div id="groupButtons" class="flex"></div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="page hidden">
+  <div class="card">
+    <div class="flex space">
+      <div class="counter" id="scoreView"></div>
+      <div class="counter" id="timeView"></div>
+    </div>
+    <div class="big-word" id="word"></div>
+    <div class="flex center">
+      <button onclick="answer(true)">정답</button>
+      <button onclick="answer(false)">오답</button>
+      <button onclick="pass()">패스</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="page hidden">
+  <div class="card">
+    <h2>결과</h2>
+    <div id="resultList"></div>
+    <button onclick="go('main')">종료</button>
+  </div>
+</div>
+
 <script>
-  const questions = [
-    { q: "대한민국의 수도는?", a: ["서울", "부산", "대구"], c: 0 },
-    { q: "3 + 5 =", a: ["6", "8", "10"], c: 1 },
-    { q: "HTML은?", a: ["언어", "마크업", "DB"], c: 1 },
-    { q: "CSS 역할은?", a: ["연산", "디자인", "서버"], c: 1 }
-  ];
+let quizzes = JSON.parse(localStorage.getItem("quizzes")||"[]");
+let currentQuiz, currentGroup, words, timer, timeLeft, score=0, passLeft;
 
-  let time = 60;
-  let score = 0;
-  let timer;
-  let current;
+function go(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  if(id==="list") renderList();
+}
 
-  const modal = document.getElementById("quizModal");
-  const kakaoBtn = document.getElementById("kakaoBtn");
+function renderList(){
+  const ql=document.getElementById("quizList");
+  ql.innerHTML="";
+  quizzes.forEach((q,i)=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`
+      <b>${q.title}</b><br>
+      그룹:${q.groups.length}
+      <div class="flex">
+        <button onclick="startQuiz(${i})">시작</button>
+        <button onclick="editQuiz(${i})">수정</button>
+        <button onclick="delQuiz(${i})">삭제</button>
+      </div>`;
+    ql.appendChild(d);
+  });
+}
 
-  kakaoBtn.onclick = () => modal.style.display = "flex";
+function createQuiz(){
+  currentQuiz=null;
+  go("admin");
+  renderAdmin();
+}
 
-  function startGame() {
-    score = 0;
-    time = 60;
-    document.getElementById("startScreen").classList.add("hidden");
-    document.getElementById("gameScreen").classList.remove("hidden");
-    nextQuestion();
-    timer = setInterval(tick, 1000);
+function editQuiz(i){
+  currentQuiz=i;
+  go("admin");
+  renderAdmin(quizzes[i]);
+}
+
+function renderAdmin(q){
+  const gi=document.getElementById("groupInputs");
+  gi.innerHTML="";
+  const gc=document.getElementById("groupCount");
+  gc.oninput=()=>renderAdmin();
+  const count=gc.value;
+  for(let i=0;i<count;i++){
+    gi.innerHTML+=`
+      <p>그룹 ${i+1} 이름</p>
+      <input class="gname" value="${q?.groups?.[i]?.name||""}">
+      <textarea class="gwords" placeholder="단어 입력 (줄 또는 ,)">${q?.groups?.[i]?.words?.join(",")||""}</textarea>
+    `;
   }
-
-  function tick() {
-    time--;
-    document.getElementById("time").textContent = time;
-    if (time <= 0) endGame();
+  if(q){
+    qTitle.value=q.title;
+    wordCount.value=q.wordCount;
+    timeLimit.value=q.time;
+    passLimit.value=q.pass;
   }
+}
 
-  function nextQuestion() {
-    current = questions[Math.floor(Math.random() * questions.length)];
-    document.getElementById("question").textContent = current.q;
-    const options = document.getElementById("options");
-    options.innerHTML = "";
-    current.a.forEach((text, i) => {
-      const div = document.createElement("div");
-      div.className = "option";
-      div.textContent = text;
-      div.onclick = () => selectAnswer(i);
-      options.appendChild(div);
-    });
-  }
+function saveQuiz(){
+  const title=qTitle.value.trim();
+  if(!title) return alert("제목 필요");
+  const groups=[...document.querySelectorAll(".gname")].map((g,i)=>({
+    name:g.value,
+    words:document.querySelectorAll(".gwords")[i].value.split(/,|\n/).map(w=>w.trim()).filter(w=>w)
+  }));
+  const quiz={
+    title,
+    wordCount:+wordCount.value,
+    time:+timeLimit.value,
+    pass:+passLimit.value,
+    groups
+  };
+  if(currentQuiz!=null) quizzes[currentQuiz]=quiz;
+  else quizzes.push(quiz);
+  localStorage.setItem("quizzes",JSON.stringify(quizzes));
+  go("list");
+}
 
-  function selectAnswer(i) {
-    if (i === current.c) score++;
-    nextQuestion();
+function delQuiz(i){
+  if(confirm("삭제?")){
+    quizzes.splice(i,1);
+    localStorage.setItem("quizzes",JSON.stringify(quizzes));
+    renderList();
   }
+}
 
-  function endGame() {
-    clearInterval(timer);
-    document.getElementById("gameScreen").classList.add("hidden");
-    document.getElementById("resultScreen").classList.remove("hidden");
-    document.getElementById("score").textContent = score;
-  }
+function startQuiz(i){
+  currentQuiz=quizzes[i];
+  currentQuiz.groups.forEach(g=>g.score=0);
+  go("groupSelect");
+  renderGroups();
+}
 
-  function resetGame() {
-    document.getElementById("resultScreen").classList.add("hidden");
-    document.getElementById("startScreen").classList.remove("hidden");
-  }
+function renderGroups(){
+  groupSentence.textContent=currentQuiz.groups.map(g=>g.name).join("");
+  groupButtons.innerHTML="";
+  currentQuiz.groups.forEach((g,i)=>{
+    if(!g.done){
+      const b=document.createElement("div");
+      b.className="group-btn";
+      b.textContent=g.name;
+      b.onclick=()=>startGroup(i);
+      groupButtons.appendChild(b);
+    }
+  });
+}
+
+function startGroup(i){
+  currentGroup=currentQuiz.groups[i];
+  currentGroup.done=true;
+  words=[...currentGroup.words].sort(()=>Math.random()-0.5);
+  score=0;
+  passLeft=currentQuiz.pass;
+  timeLeft=currentQuiz.time;
+  go("quiz");
+  countdown(3);
+}
+
+function countdown(n){
+  word.textContent=n;
+  if(n>0)setTimeout(()=>countdown(n-1),1000);
+  else startGame();
+}
+
+function startGame(){
+  nextWord();
+  timer=setInterval(()=>{
+    timeLeft--;
+    timeView.textContent=`시간:${timeLeft}`;
+    if(timeLeft<=0) endGroup();
+  },1000);
+}
+
+function nextWord(){
+  if(words.length===0) return endGroup();
+  word.textContent=words.pop();
+  scoreView.textContent=`정답:${score}`;
+}
+
+function answer(ok){
+  if(ok) score++;
+  nextWord();
+}
+
+function pass(){
+  if(passLeft<=0)return;
+  passLeft--;
+  nextWord();
+}
+
+function endGroup(){
+  clearInterval(timer);
+  currentGroup.score=score;
+  go("groupSelect");
+  renderGroups();
+  if(currentQuiz.groups.every(g=>g.done)) showResult();
+}
+
+function showResult(){
+  go("result");
+  const r=document.getElementById("resultList");
+  r.innerHTML="";
+  const sorted=[...currentQuiz.groups].sort((a,b)=>b.score-a.score);
+  sorted.forEach((g,i)=>{
+    r.innerHTML+=`<p class="rank${i+1}">${i+1}위 ${g.name} : ${g.score}</p>`;
+  });
+}
 </script>
-
 </body>
 </html>
