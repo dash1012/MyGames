@@ -23,91 +23,74 @@
         body { background-color: var(--bg); color: var(--text-main); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
 
         .app-container {
-            width: 1440px;
-            height: 810px;
-            background: var(--card);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            width: 1440px; height: 810px; background: var(--card); border-radius: 24px;
+            box-shadow: var(--shadow); position: relative; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        .header-logo {
-            position: absolute; top: 30px; left: 40px; font-weight: 800; font-size: 1.4rem; color: var(--primary); z-index: 10;
-        }
+        .header-logo { position: absolute; top: 30px; left: 40px; font-weight: 800; font-size: 1.4rem; color: var(--primary); z-index: 10; }
 
-        .timer-progress-wrap {
-            width: 100%; height: 10px; background: #e2e8f0; position: absolute; top: 0; left: 0;
-        }
-        #timer-progress-bar {
-            width: 100%; height: 100%; background: var(--success); transition: width 0.1s linear;
-        }
+        /* 타이머 바 */
+        .timer-progress-wrap { width: 100%; height: 12px; background: #e2e8f0; position: absolute; top: 0; left: 0; }
+        #timer-progress-bar { width: 100%; height: 100%; background: var(--success); transition: width 0.1s linear; }
 
         .view { padding: 50px 100px; flex-grow: 1; display: flex; flex-direction: column; animation: fadeIn 0.4s ease-out; height: 100%; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
 
-        .btn { border: none; border-radius: var(--radius); padding: 12px 24px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        /* 버튼 및 단축키 안내 */
+        .btn { border: none; border-radius: var(--radius); padding: 18px 24px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--text-sub); }
-        .btn-lg { padding: 18px 40px; font-size: 1.2rem; }
+        .key-hint { font-size: 0.8rem; opacity: 0.7; font-weight: 400; margin-top: 4px; background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 4px; }
 
-        input, textarea { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
-        
+        /* 단어 카드 및 애니메이션 */
         .word-card { 
             background: #f8fafc; border-radius: 40px; flex-grow: 1; display: flex; align-items: center; justify-content: center; 
-            font-size: 7.5rem; font-weight: 800; color: var(--text-main); margin: 40px 0; border: 2px solid #f1f5f9;
+            font-size: 8rem; font-weight: 800; color: var(--text-main); margin: 30px 0; border: 2px solid #f1f5f9;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .correct-anim { animation: bounceIn 0.5s; color: var(--success) !important; }
+        .wrong-anim { animation: shake 0.4s; color: var(--danger) !important; }
+        
+        @keyframes bounceIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-20px); } 75% { transform: translateX(20px); } }
+
+        /* 플로팅 텍스트 피드백 */
+        #feedback-text {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 5rem; font-weight: 900; pointer-events: none; z-index: 100; opacity: 0;
+        }
+        .float-up { animation: floatUp 0.6s forwards; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, -20%); } 50% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -100%); } }
 
         /* 시상대 */
         .podium { display: flex; align-items: flex-end; justify-content: center; gap: 30px; height: 350px; margin-top: 50px; }
         .podium-bar { 
             width: 180px; border-radius: 12px 12px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
-            padding-bottom: 25px; color: white; font-weight: 700; 
-            animation: growUp 1.2s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards; 
-            transform-origin: bottom; transform: scaleY(0);
+            padding-bottom: 25px; color: white; font-weight: 700; transform-origin: bottom; animation: growUp 1.2s forwards; transform: scaleY(0);
         }
         @keyframes growUp { to { transform: scaleY(1); } }
-        .crown-text { font-size: 2.2rem; margin-bottom: 10px; animation: bounce 2s infinite; }
+        .crown-text { font-size: 2.5rem; margin-bottom: 10px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        .scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 15px; margin-bottom: 20px; }
-        .quiz-item-card { background:#f8fafc; padding:20px; border-radius:15px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #e2e8f0; }
-
-        /* 그룹 선택 가로 한 줄 배치 (Row) */
-        .group-row {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            padding: 40px 20px;
-            flex-wrap: wrap; /* 그룹이 너무 많을 경우를 대비해 줄바꿈 허용 */
-        }
-        .group-item-container {
-            width: 160px; /* 고정 너비로 자리 유지 */
-            height: 100px;
-        }
-        .played-hidden {
-            visibility: hidden; /* 자리는 유지하되 보이지 않게 처리 */
-            pointer-events: none;
-        }
+        .group-row { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 20px; width: 100%; padding: 40px 20px; flex-wrap: wrap; }
+        .group-item-container { width: 180px; height: 110px; }
+        .played-hidden { visibility: hidden; pointer-events: none; }
+        .scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 15px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header-logo">Speed-Quiz</div>
-    <div id="flash-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.1s;"></div>
+    <div id="flash-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; opacity: 0; transition: opacity 0.15s;"></div>
+    <div id="feedback-text"></div>
 
     <div id="main-view" class="view">
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <h1 style="font-size: 4.5rem; margin: 0; color: var(--primary);">Speed Quiz</h1>
-            <p style="font-size: 1.4rem; color: var(--text-sub); margin-bottom: 60px;">팀 대항 스피드 퀴즈</p>
-            <button class="btn btn-primary btn-lg" onclick="showView('list-view')">시작하기</button>
+            <h1 style="font-size: 5rem; margin: 0; color: var(--primary);">Speed Quiz</h1>
+            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 60px;">키보드 단축키로 더 빠르게!</p>
+            <button class="btn btn-primary btn-lg" style="width:250px" onclick="showView('list-view')">시작하기</button>
         </div>
     </div>
 
@@ -117,84 +100,96 @@
             <button class="btn btn-outline" onclick="showView('main-view')">홈으로</button>
         </div>
         <div id="quiz-list-items" class="scroll-area"></div>
-        <div style="text-align: right;">
-            <button class="btn btn-primary" onclick="openAdmin()">+ 새 퀴즈 세트 추가</button>
-        </div>
+        <div style="text-align: right;"><button class="btn btn-primary" onclick="openAdmin()">+ 새 세트 추가</button></div>
     </div>
 
     <div id="admin-view" class="view hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-            <h2 id="admin-title" style="margin:0;">퀴즈 설정</h2>
+            <h2 id="admin-title" style="margin:0;">설정</h2>
             <button class="btn btn-outline" onclick="showView('list-view')">취소</button>
         </div>
         <div class="scroll-area">
             <div style="max-width: 900px; margin: 0 auto;">
-                <label style="font-weight: 600;">퀴즈 제목</label>
-                <input type="text" id="quiz-title-input">
+                <label>퀴즈 제목</label><input type="text" id="quiz-title-input" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:8px;">
                 <div style="display:flex; gap:30px; margin-bottom: 20px;">
-                    <div style="flex:1"><label>그룹 수</label><input type="number" id="group-count" value="3" onchange="renderGroupInputs()"></div>
-                    <div style="flex:1"><label>시간(초)</label><input type="number" id="limit-time" value="60"></div>
+                    <div style="flex:1"><label>그룹 수</label><input type="number" id="group-count" value="3" onchange="renderGroupInputs()" style="width:100%; padding:10px;"></div>
+                    <div style="flex:1"><label>제한 시간(초)</label><input type="number" id="limit-time" value="60" style="width:100%; padding:10px;"></div>
                 </div>
                 <div id="groups-container"></div>
             </div>
         </div>
-        <div style="text-align: center;"><button class="btn btn-primary btn-lg" style="width: 300px;" onclick="saveQuiz()">저장하기</button></div>
+        <div style="text-align: center; margin-top:20px;"><button class="btn btn-primary btn-lg" style="width: 300px;" onclick="saveQuiz()">저장하기</button></div>
     </div>
 
     <div id="selection-view" class="view hidden">
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <h2 style="font-size: 2rem; color:var(--text-sub); margin-bottom: 50px;">플레이할 그룹을 선택하세요</h2>
+            <h2 style="font-size: 2.2rem; color:var(--text-sub); margin-bottom: 50px;">팀을 선택하세요</h2>
             <div class="group-row" id="group-buttons-container"></div>
         </div>
     </div>
 
     <div id="ready-view" class="view hidden">
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div id="ready-group-name" style="font-size: 4rem; font-weight: 800; color: var(--primary); margin-bottom: 20px;"></div>
-            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 60px;">준비가 되면 버튼을 눌러주세요</p>
-            <button class="btn btn-primary btn-lg" style="width: 400px; height: 100px; font-size: 2.5rem;" onclick="startCountdown()">퀴즈 시작</button>
+            <div id="ready-group-name" style="font-size: 4.5rem; font-weight: 800; color: var(--primary); margin-bottom: 20px;"></div>
+            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 60px;">스페이스바 또는 시작 버튼을 누르세요</p>
+            <button class="btn btn-primary btn-lg" style="width: 400px; height: 120px; font-size: 3rem;" onclick="startCountdown()">GO!</button>
         </div>
     </div>
 
     <div id="play-view" class="view hidden">
         <div class="timer-progress-wrap"><div id="timer-progress-bar"></div></div>
-        <div style="display:flex; justify-content: space-between; align-items: center;">
-            <div id="timer-display" style="font-size: 4rem; font-weight: 900;">60</div>
-            <div style="font-size: 2rem; font-weight: 700;">점수: <span id="current-score" style="color:var(--success)">0</span></div>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+            <div id="timer-display" style="font-size: 4.5rem; font-weight: 900;">60</div>
+            <div style="font-size: 2.2rem; font-weight: 700;">맞힌 개수: <span id="current-score" style="color:var(--success)">0</span></div>
         </div>
+        
         <div class="word-card" id="word-display">READY</div>
-        <div id="play-controls" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 1000px; margin: 0 auto;">
-            <button class="btn btn-primary btn-lg" style="background: var(--success); font-size: 1.8rem;" onclick="handleAnswer(true)">정답</button>
-            <button class="btn btn-primary btn-lg" style="background: var(--danger); font-size: 1.8rem;" onclick="handleAnswer(false)">오답</button>
-            <button class="btn btn-outline btn-lg" style="font-size: 1.5rem;" onclick="handlePass()">패스 (<span id="pass-count">0</span>)</button>
+
+        <div id="play-controls" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; width: 1100px; margin: 0 auto;">
+            <button class="btn btn-primary" style="background: var(--success); height: 100px; font-size: 2rem;" onclick="handleAnswer(true)">
+                정답
+                <span class="key-hint">Key: O / Enter</span>
+            </button>
+            <button class="btn btn-primary" style="background: var(--danger); height: 100px; font-size: 2rem;" onclick="handleAnswer(false)">
+                오답
+                <span class="key-hint">Key: X / Esc</span>
+            </button>
+            <button class="btn btn-outline" style="height: 100px; font-size: 1.8rem;" onclick="handlePass()">
+                패스 (<span id="pass-count">0</span>)
+                <span class="key-hint">Key: Space</span>
+            </button>
         </div>
     </div>
 
     <div id="result-view" class="view hidden">
-        <h2 style="text-align:center; font-size: 3rem; margin: 0;">최종 결과</h2>
+        <h2 style="text-align:center; font-size: 3.5rem; margin: 0;">FINAL RANKING</h2>
         <div class="podium" id="podium-area"></div>
-        <div style="text-align: center; margin-top: 50px;"><button class="btn btn-outline btn-lg" onclick="showView('main-view')">메인으로</button></div>
+        <div style="text-align: center; margin-top: 60px;"><button class="btn btn-outline btn-lg" onclick="showView('main-view')">처음으로</button></div>
     </div>
 </div>
 
 <script>
-    let quizzes = JSON.parse(localStorage.getItem('quizzes_v8')) || [];
-    let state = { currentQuiz: null, currentQuizIdx: -1, playingIdx: -1, results: [], played: new Set(), timer: null, timeLeft: 0, totalTime: 0, wordIdx: 0, score: 0, passes: 0, words: [] };
+    let quizzes = JSON.parse(localStorage.getItem('quizzes_v9')) || [];
+    let state = { currentQuiz: null, playingIdx: -1, results: [], played: new Set(), timer: null, timeLeft: 0, totalTime: 0, wordIdx: 0, score: 0, passes: 0, words: [], isCounting: false, isPlaying: false };
+
+    // 키보드 이벤트 리스너
+    window.addEventListener('keydown', (e) => {
+        if (state.isCounting) return;
+        
+        if (state.isPlaying) {
+            const key = e.key.toLowerCase();
+            if (key === 'o' || key === 'enter') handleAnswer(true);
+            else if (key === 'x' || key === 'escape') handleAnswer(false);
+            else if (key === ' ') handlePass();
+        } else if (!document.getElementById('ready-view').classList.contains('hidden')) {
+            if (e.key === ' ') startCountdown();
+        }
+    });
 
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
         if(id === 'list-view') renderQuizList();
-    }
-
-    function renderQuizList() {
-        const container = document.getElementById('quiz-list-items');
-        container.innerHTML = quizzes.map((q, i) => `
-            <div class="quiz-item-card">
-                <div><div style="font-weight:700; font-size: 1.3rem;">${q.title}</div><div style="color:var(--text-sub); font-size:0.9rem;">${q.groups.length}개 그룹 / ${q.time}초</div></div>
-                <div style="display:flex; gap:8px;"><button class="btn btn-primary" onclick="startQuiz(${i})">시작</button><button class="btn btn-outline" onclick="openAdmin(${i})">수정</button><button class="btn btn-outline" style="color:var(--danger)" onclick="deleteQuiz(${i})">삭제</button></div>
-            </div>
-        `).join('');
     }
 
     function startQuiz(idx) {
@@ -207,60 +202,40 @@
         showView('selection-view');
         const container = document.getElementById('group-buttons-container');
         container.innerHTML = '';
-        
         state.currentQuiz.groups.forEach((g, i) => {
-            const isPlayed = state.played.has(i);
             const wrapper = document.createElement('div');
             wrapper.className = 'group-item-container';
-            
             const btn = document.createElement('button');
-            // 가로 줄에서는 테두리가 있는 원형 또는 사각 버튼 스타일 추천
-            btn.className = `btn btn-outline ${isPlayed ? 'played-hidden' : ''}`;
-            btn.style.width = "100%";
-            btn.style.height = "100%";
-            btn.style.fontSize = "2rem";
-            btn.style.borderRadius = "20px";
-            btn.innerText = g.name; // 이름이 숫자인 경우 1, 2, 3...
-            btn.onclick = () => prepareReadyStep(i);
-            
+            btn.className = `btn btn-outline ${state.played.has(i) ? 'played-hidden' : ''}`;
+            btn.style.width = "100%"; btn.style.height = "100%"; btn.style.fontSize = "2.2rem"; btn.style.borderRadius = "24px";
+            btn.innerText = g.name;
+            btn.onclick = () => { state.playingIdx = i; document.getElementById('ready-group-name').innerText = g.name; showView('ready-view'); };
             wrapper.appendChild(btn);
             container.appendChild(wrapper);
         });
-
         if(state.played.size === state.currentQuiz.groups.length && state.played.size > 0) showResults();
     }
 
-    function prepareReadyStep(idx) {
-        state.playingIdx = idx;
-        document.getElementById('ready-group-name').innerText = state.currentQuiz.groups[idx].name;
-        showView('ready-view');
-    }
-
     function startCountdown() {
+        state.isCounting = true;
         showView('play-view');
         state.words = [...state.currentQuiz.groups[state.playingIdx].words].sort(() => Math.random() - 0.5);
-        state.wordIdx = 0; state.score = 0;
+        state.wordIdx = 0; state.score = 0; state.passes = 3;
         state.totalTime = parseInt(state.currentQuiz.time);
         state.timeLeft = state.totalTime;
-        state.passes = 3;
 
         const disp = document.getElementById('word-display');
-        disp.innerText = "READY";
         document.getElementById('play-controls').style.opacity = '0.1';
-        document.getElementById('play-controls').style.pointerEvents = 'none';
-        
-        updatePlayUI();
         
         let cnt = 3;
         const countTimer = setInterval(() => {
-            if (cnt > 0) disp.innerText = cnt;
-            else if (cnt === 0) disp.innerText = 'START';
-            else {
-                clearInterval(countTimer); 
+            disp.innerText = cnt > 0 ? cnt : 'START!';
+            if (cnt < 0) {
+                clearInterval(countTimer);
+                state.isCounting = false;
+                state.isPlaying = true;
                 document.getElementById('play-controls').style.opacity = '1';
-                document.getElementById('play-controls').style.pointerEvents = 'auto';
-                runGame(); 
-                return;
+                runGame();
             }
             cnt--;
         }, 1000);
@@ -275,6 +250,58 @@
         }, 100);
     }
 
+    function nextWord() {
+        const disp = document.getElementById('word-display');
+        if(state.wordIdx >= state.words.length) return endGame();
+        disp.innerText = state.words[state.wordIdx];
+        disp.classList.remove('correct-anim', 'wrong-anim');
+    }
+
+    function triggerFeedback(type) {
+        const ov = document.getElementById('flash-overlay');
+        const ft = document.getElementById('feedback-text');
+        const card = document.getElementById('word-display');
+        
+        ft.classList.remove('float-up');
+        void ft.offsetWidth; // 리플로우
+
+        if (type === 'correct') {
+            ov.style.background = 'rgba(16, 185, 129, 0.4)';
+            ft.innerText = "CORRECT!";
+            ft.style.color = 'var(--success)';
+            card.classList.add('correct-anim');
+        } else if (type === 'wrong') {
+            ov.style.background = 'rgba(239, 68, 68, 0.4)';
+            ft.innerText = "WRONG!";
+            ft.style.color = 'var(--danger)';
+            card.classList.add('wrong-anim');
+        } else {
+            ov.style.background = 'rgba(245, 158, 11, 0.4)';
+            ft.innerText = "PASS";
+            ft.style.color = 'var(--warning)';
+        }
+
+        ov.style.opacity = '1';
+        ft.classList.add('float-up');
+        setTimeout(() => ov.style.opacity = '0', 200);
+    }
+
+    function handleAnswer(isO) {
+        if (!state.isPlaying) return;
+        triggerFeedback(isO ? 'correct' : 'wrong');
+        if(isO) state.score++;
+        state.wordIdx++;
+        setTimeout(nextWord, 100);
+    }
+
+    function handlePass() {
+        if (!state.isPlaying || state.passes <= 0) return;
+        triggerFeedback('pass');
+        state.passes--;
+        state.wordIdx++;
+        setTimeout(nextWord, 100);
+    }
+
     function updatePlayUI() {
         const bar = document.getElementById('timer-progress-bar');
         const ratio = (state.timeLeft / state.totalTime) * 100;
@@ -285,29 +312,12 @@
         document.getElementById('pass-count').innerText = state.passes;
     }
 
-    function nextWord() {
-        if(state.wordIdx >= state.words.length) return endGame();
-        document.getElementById('word-display').innerText = state.words[state.wordIdx];
-    }
-
-    function handleAnswer(isO) {
-        const ov = document.getElementById('flash-overlay');
-        ov.style.background = isO ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-        ov.style.opacity = '1';
-        setTimeout(() => ov.style.opacity = '0', 150);
-        if(isO) state.score++;
-        state.wordIdx++; nextWord();
-    }
-
-    function handlePass() {
-        if(state.passes > 0) { state.passes--; state.wordIdx++; nextWord(); }
-    }
-
     function endGame() {
         clearInterval(state.timer);
+        state.isPlaying = false;
         state.results.push({ name: state.currentQuiz.groups[state.playingIdx].name, score: state.score });
         state.played.add(state.playingIdx);
-        showSelection();
+        setTimeout(showSelection, 1000);
     }
 
     function showResults() {
@@ -317,7 +327,7 @@
         podium.innerHTML = '';
         const order = [1, 0, 2];
         const colors = ['#cbd5e1', '#f59e0b', '#d97706'];
-        const heights = ['200px', '300px', '150px'];
+        const heights = ['200px', '320px', '160px'];
         
         order.forEach((posIdx, visualIdx) => {
             if(sorted[posIdx]) {
@@ -328,35 +338,40 @@
                 bar.style.order = visualIdx;
                 let content = '';
                 if(posIdx === 0) content += `<div class="crown-text">👑</div>`;
-                content += `<div>${posIdx+1}위</div><div style="font-size:1.5rem;">${sorted[posIdx].name}</div><div>${sorted[posIdx].score}점</div>`;
+                content += `<div style="font-size:1.2rem;">${posIdx+1}위</div><div style="font-size:1.8rem; margin:5px 0;">${sorted[posIdx].name}</div><div style="font-size:1.4rem;">${sorted[posIdx].score}점</div>`;
                 bar.innerHTML = content;
                 podium.appendChild(bar);
             }
         });
     }
 
+    // 관리자 기능 동일
+    function renderQuizList() {
+        const container = document.getElementById('quiz-list-items');
+        container.innerHTML = quizzes.map((q, i) => `
+            <div style="background:#f8fafc; padding:20px; border-radius:15px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #e2e8f0;">
+                <div><div style="font-weight:700; font-size: 1.4rem;">${q.title}</div><div style="color:var(--text-sub);">${q.groups.length}개 그룹 / ${q.time}초</div></div>
+                <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="startQuiz(${i})">시작</button><button class="btn btn-outline" onclick="openAdmin(${i})">수정</button></div>
+            </div>
+        `).join('');
+    }
+
     function openAdmin(idx = -1) {
         state.currentQuizIdx = idx;
         const qTitle = document.getElementById('quiz-title-input');
-        const gCount = document.getElementById('group-count');
-        const tLimit = document.getElementById('limit-time');
         if(idx > -1) {
-            const q = quizzes[idx];
-            qTitle.value = q.title; gCount.value = q.groups.length; tLimit.value = q.time;
-            document.getElementById('admin-title').innerText = "퀴즈 수정";
+            qTitle.value = quizzes[idx].title;
+            document.getElementById('group-count').value = quizzes[idx].groups.length;
+            document.getElementById('limit-time').value = quizzes[idx].time;
         } else {
-            qTitle.value = ""; gCount.value = 3; tLimit.value = 60;
-            document.getElementById('admin-title').innerText = "새 퀴즈 추가";
+            qTitle.value = "";
         }
         showView('admin-view');
         renderGroupInputs();
         if(idx > -1) {
             const names = document.querySelectorAll('.g-name');
             const words = document.querySelectorAll('.g-words');
-            quizzes[idx].groups.forEach((g, i) => {
-                if(names[i]) names[i].value = g.name;
-                if(words[i]) words[i].value = g.words.join(', ');
-            });
+            quizzes[idx].groups.forEach((g, i) => { if(names[i]) names[i].value = g.name; if(words[i]) words[i].value = g.words.join(', '); });
         }
     }
 
@@ -365,37 +380,24 @@
         const count = document.getElementById('group-count').value;
         c.innerHTML = '';
         for(let i=0; i<count; i++) {
-            c.innerHTML += `<div style="margin-bottom:20px; background:#f8fafc; padding:20px; border-radius:12px; border: 1px solid #e2e8f0;">
-                <label style="font-size:0.85rem; font-weight:600;">그룹 ${i+1} 이름</label>
-                <input type="text" class="g-name" placeholder="팀 이름">
-                <label style="font-size:0.85rem; font-weight:600;">단어 목록 (콤마 구분)</label>
-                <textarea class="g-words" placeholder="단어1, 단어2..." rows="2"></textarea>
+            c.innerHTML += `<div style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:12px; border: 1px solid #e2e8f0;">
+                <label>그룹 ${i+1} 이름</label><input type="text" class="g-name" style="width:100%; padding:8px; margin-bottom:10px; border-radius:5px; border:1px solid #ddd;">
+                <label>단어들 (콤마구분)</label><textarea class="g-words" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ddd;"></textarea>
             </div>`;
         }
     }
 
     function saveQuiz() {
         const title = document.getElementById('quiz-title-input').value;
-        if(!title) return alert("제목을 입력하세요");
+        if(!title) return alert("제목 필수");
         const names = document.querySelectorAll('.g-name');
         const words = document.querySelectorAll('.g-words');
         let groups = [];
-        names.forEach((n, i) => {
-            if(n.value) groups.push({ name: n.value, words: words[i].value.split(',').map(s=>s.trim()).filter(s=>s) });
-        });
+        names.forEach((n, i) => { if(n.value) groups.push({ name: n.value, words: words[i].value.split(',').map(s=>s.trim()).filter(s=>s) }); });
         const data = { title, groups, time: document.getElementById('limit-time').value };
-        if(state.currentQuizIdx > -1) quizzes[state.currentQuizIdx] = data;
-        else quizzes.push(data);
-        localStorage.setItem('quizzes_v8', JSON.stringify(quizzes));
+        if(state.currentQuizIdx > -1) quizzes[state.currentQuizIdx] = data; else quizzes.push(data);
+        localStorage.setItem('quizzes_v9', JSON.stringify(quizzes));
         showView('list-view');
-    }
-
-    function deleteQuiz(i) {
-        if(confirm("삭제하시겠습니까?")) {
-            quizzes.splice(i, 1);
-            localStorage.setItem('quizzes_v8', JSON.stringify(quizzes));
-            renderQuizList();
-        }
     }
 </script>
 </body>
