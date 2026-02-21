@@ -1,337 +1,436 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Speed Quiz Tool</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-:root{
-  --bg:#0f172a;
-  --card:#1e293b;
-  --accent:#38bdf8;
-  --text:#e5e7eb;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Pretendard,Arial,sans-serif;
-  background:linear-gradient(135deg,#0f172a,#020617);
-  color:var(--text);
-}
-.hidden{display:none}
-button{
-  background:var(--accent);
-  border:none;
-  border-radius:12px;
-  padding:12px 18px;
-  font-size:16px;
-  font-weight:700;
-  cursor:pointer;
-}
-button.secondary{background:#475569}
-input,textarea{
-  width:100%;
-  background:#020617;
-  color:white;
-  border:1px solid #334155;
-  border-radius:8px;
-  padding:8px;
-}
-textarea{min-height:80px}
-.page{
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-.card{
-  width:100%;
-  max-width:500px;
-  background:var(--card);
-  border-radius:16px;
-  padding:20px;
-  margin:10px 0;
-}
-h1,h2,h3{text-align:center;margin:10px 0}
-.flex{display:flex;gap:10px;flex-wrap:wrap}
-.space{justify-content:space-between}
-.center{justify-content:center}
-.group-btn{
-  background:#334155;
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:700;
-}
-.big-word{
-  font-size:48px;
-  font-weight:900;
-  margin:40px 0;
-  text-align:center;
-}
-.counter{
-  font-size:18px;
-  font-weight:700;
-}
-.rank1{color:#facc15}
-.rank2{color:#e5e7eb}
-.rank3{color:#fb7185}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Quiz Tool</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
+
+        .container { width: 95%; max-width: 600px; background: var(--card); border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 30px; position: relative; min-height: 600px; display: flex; flex-direction: column; }
+
+        /* Navigation */
+        .hidden { display: none !important; }
+        .view { animation: fadeIn 0.3s ease; display: flex; flex-direction: column; height: 100%; flex-grow: 1; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Elements */
+        h1 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        button { cursor: pointer; border: none; border-radius: 10px; padding: 12px 20px; font-weight: bold; transition: 0.2s; background: var(--primary); color: white; margin: 5px; }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+        button.secondary { background: var(--secondary); }
+        button.accent { background: var(--accent); }
+        button.outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+
+        /* Main View */
+        #main-view { align-items: center; justify-content: center; }
+        .main-icon { font-size: 80px; margin-bottom: 20px; }
+
+        /* List View */
+        .quiz-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; }
+
+        /* Admin View */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .group-config { background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .counter-btn { width: 40px; }
+
+        /* Quiz View */
+        .timer { font-size: 2rem; font-weight: bold; color: var(--secondary); text-align: center; }
+        .quiz-word { font-size: 4rem; text-align: center; margin: 40px 0; font-weight: 800; color: var(--primary); }
+        .score-badge { position: absolute; top: 20px; left: 20px; font-weight: bold; }
+        .quiz-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .pass-btn { grid-column: span 2; background: #94a3b8; }
+
+        /* Selection View */
+        .sentence-display { font-size: 1.5rem; text-align: center; margin-bottom: 20px; font-weight: bold; letter-spacing: 5px; }
+        .group-buttons { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
+
+        /* Result View */
+        .rank-item { padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; font-weight: bold; }
+        .rank-1 { background: gold; transform: scale(1.05); }
+        .rank-2 { background: silver; }
+        .rank-3 { background: #cd7f32; color: white; }
+        
+        .countdown-overlay { font-size: 8rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--primary); z-index: 100; font-weight: 900; }
+    </style>
 </head>
 <body>
 
-<!-- MAIN -->
-<div id="main" class="page">
-  <div class="card">
-    <h1>⚡ Speed Quiz Tool</h1>
-    <button onclick="go('list')">플레이</button>
-  </div>
-</div>
-
-<!-- LIST -->
-<div id="list" class="page hidden">
-  <div class="card">
-    <h2>퀴즈 목록</h2>
-    <div id="quizList"></div>
-    <div class="flex center">
-      <button onclick="createQuiz()">+ 생성</button>
-      <button class="secondary" onclick="go('main')">뒤로</button>
+<div class="container">
+    <div id="main-view" class="view">
+        <div class="main-icon">⚡</div>
+        <h1>Speed Quiz Tool</h1>
+        <button onclick="showView('list-view')" style="padding: 20px 60px; font-size: 1.2rem;">플레이</button>
     </div>
-  </div>
-</div>
 
-<!-- ADMIN -->
-<div id="admin" class="page hidden">
-  <div class="card">
-    <h2>퀴즈 설정</h2>
-    <input id="qTitle" placeholder="퀴즈 제목">
-
-    <p>그룹 수</p>
-    <input type="number" id="groupCount" min="1" max="10" value="3">
-
-    <p>그룹당 단어 수</p>
-    <input type="number" id="wordCount" min="1" max="40" value="10">
-
-    <p>제한 시간 (초)</p>
-    <input type="number" id="timeLimit" value="60">
-
-    <p>패스 횟수</p>
-    <input type="number" id="passLimit" value="3">
-
-    <div id="groupInputs"></div>
-
-    <div class="flex center">
-      <button onclick="saveQuiz()">저장</button>
-      <button class="secondary" onclick="go('list')">취소</button>
+    <div id="list-view" class="view hidden">
+        <h1>퀴즈 목록</h1>
+        <div id="quiz-items-container"></div>
+        <div style="margin-top: auto;">
+            <button class="accent" onclick="openAdmin()">새 퀴즈 만들기</button>
+            <button class="outline" onclick="showView('main-view')">뒤로가기</button>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- GROUP SELECT -->
-<div id="groupSelect" class="page hidden">
-  <div class="card">
-    <h2 id="groupSentence"></h2>
-    <div id="groupButtons" class="flex"></div>
-  </div>
-</div>
-
-<!-- QUIZ -->
-<div id="quiz" class="page hidden">
-  <div class="card">
-    <div class="flex space">
-      <div class="counter" id="scoreView"></div>
-      <div class="counter" id="timeView"></div>
+    <div id="admin-view" class="view hidden">
+        <h1 id="admin-title">퀴즈 생성/수정</h1>
+        <div style="overflow-y: auto; flex-grow: 1; padding-right: 10px;">
+            <div class="form-group">
+                <label>퀴즈 제목</label>
+                <input type="text" id="quiz-title-input" placeholder="예: 우리말 나들이">
+            </div>
+            <div class="form-group">
+                <label>그룹 수 (최대 10개)</label>
+                <button class="counter-btn" onclick="adjustCount('group-count', -1)">-</button>
+                <input type="number" id="group-count" value="3" min="1" max="10" readonly style="width: 60px; text-align: center;">
+                <button class="counter-btn" onclick="adjustCount('group-count', 1)">+</button>
+            </div>
+            <div class="form-group">
+                <label>그룹당 단어 개수 (최대 40개)</label>
+                <button class="counter-btn" onclick="adjustCount('word-count', -1)">-</button>
+                <input type="number" id="word-count" value="5" min="1" max="40" readonly style="width: 60px; text-align: center;">
+                <button class="counter-btn" onclick="adjustCount('word-count', 1)">+</button>
+            </div>
+            <div class="form-group">
+                <label>제한 시간 (초)</label>
+                <input type="number" id="limit-time" value="60">
+            </div>
+            <div class="form-group">
+                <label>패스 횟수</label>
+                <input type="number" id="pass-limit" value="3">
+            </div>
+            <hr>
+            <div id="groups-container"></div>
+        </div>
+        <div style="margin-top: 20px;">
+            <button onclick="saveQuiz()" style="width: 100%;">저장 및 완료</button>
+            <button class="outline" onclick="showView('list-view')" style="width: 100%;">취소</button>
+        </div>
     </div>
-    <div class="big-word" id="word"></div>
-    <div class="flex center">
-      <button onclick="answer(true)">정답</button>
-      <button onclick="answer(false)">오답</button>
-      <button onclick="pass()">패스</button>
-    </div>
-  </div>
-</div>
 
-<!-- RESULT -->
-<div id="result" class="page hidden">
-  <div class="card">
-    <h2>결과</h2>
-    <div id="resultList"></div>
-    <button onclick="go('main')">종료</button>
-  </div>
+    <div id="selection-view" class="view hidden">
+        <h1>그룹 선택</h1>
+        <div class="sentence-display" id="sentence-display"></div>
+        <div class="group-buttons" id="group-buttons-container"></div>
+        <div style="margin-top: auto; text-align: center;">
+            <button class="outline" onclick="showView('list-view')">중단하기</button>
+        </div>
+    </div>
+
+    <div id="play-view" class="view hidden">
+        <div class="score-badge">정답 개수 : <span id="current-score">0</span></div>
+        <div class="timer" id="timer-display">00</div>
+        <div id="countdown" class="countdown-overlay hidden"></div>
+        <div class="quiz-word" id="word-display">READY?</div>
+        <div class="quiz-controls">
+            <button onclick="handleAnswer(true)" style="height: 80px; font-size: 1.5rem; background: #22c55e;">정답 (O)</button>
+            <button onclick="handleAnswer(false)" style="height: 80px; font-size: 1.5rem; background: #ef4444;">오답 (X)</button>
+            <button class="pass-btn" id="pass-btn" onclick="handlePass()">패스 (남은 횟수: <span id="pass-count">0</span>)</button>
+        </div>
+    </div>
+
+    <div id="result-view" class="view hidden">
+        <h1>최종 순위</h1>
+        <div id="rankings-list"></div>
+        <div id="bonus-area" class="hidden" style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 10px; text-align: center;">
+            <p>동점자가 발생했습니다!</p>
+            <button class="accent" onclick="startBonusGame()">보너스 게임 시작</button>
+        </div>
+        <div style="margin-top: auto;">
+            <button onclick="showView('main-view')" style="width: 100%;">메인으로 이동</button>
+        </div>
+    </div>
 </div>
 
 <script>
-let quizzes = JSON.parse(localStorage.getItem("quizzes")||"[]");
-let currentQuiz, currentGroup, words, timer, timeLeft, score=0, passLeft;
+    /* Data State */
+    let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+    let currentQuiz = null;
+    let editingIndex = -1;
+    let playingGroupIdx = -1;
+    let results = []; // {groupName, score}
+    let playedGroups = new Set();
+    
+    // Play state
+    let gameTimer = null;
+    let timeLeft = 0;
+    let currentWords = [];
+    let currentWordIdx = 0;
+    let currentCorrect = 0;
+    let currentPasses = 0;
 
-function go(id){
-  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  if(id==="list") renderList();
-}
-
-function renderList(){
-  const ql=document.getElementById("quizList");
-  ql.innerHTML="";
-  quizzes.forEach((q,i)=>{
-    const d=document.createElement("div");
-    d.className="card";
-    d.innerHTML=`
-      <b>${q.title}</b><br>
-      그룹:${q.groups.length}
-      <div class="flex">
-        <button onclick="startQuiz(${i})">시작</button>
-        <button onclick="editQuiz(${i})">수정</button>
-        <button onclick="delQuiz(${i})">삭제</button>
-      </div>`;
-    ql.appendChild(d);
-  });
-}
-
-function createQuiz(){
-  currentQuiz=null;
-  go("admin");
-  renderAdmin();
-}
-
-function editQuiz(i){
-  currentQuiz=i;
-  go("admin");
-  renderAdmin(quizzes[i]);
-}
-
-function renderAdmin(q){
-  const gi=document.getElementById("groupInputs");
-  gi.innerHTML="";
-  const gc=document.getElementById("groupCount");
-  gc.oninput=()=>renderAdmin();
-  const count=gc.value;
-  for(let i=0;i<count;i++){
-    gi.innerHTML+=`
-      <p>그룹 ${i+1} 이름</p>
-      <input class="gname" value="${q?.groups?.[i]?.name||""}">
-      <textarea class="gwords" placeholder="단어 입력 (줄 또는 ,)">${q?.groups?.[i]?.words?.join(",")||""}</textarea>
-    `;
-  }
-  if(q){
-    qTitle.value=q.title;
-    wordCount.value=q.wordCount;
-    timeLimit.value=q.time;
-    passLimit.value=q.pass;
-  }
-}
-
-function saveQuiz(){
-  const title=qTitle.value.trim();
-  if(!title) return alert("제목 필요");
-  const groups=[...document.querySelectorAll(".gname")].map((g,i)=>({
-    name:g.value,
-    words:document.querySelectorAll(".gwords")[i].value.split(/,|\n/).map(w=>w.trim()).filter(w=>w)
-  }));
-  const quiz={
-    title,
-    wordCount:+wordCount.value,
-    time:+timeLimit.value,
-    pass:+passLimit.value,
-    groups
-  };
-  if(currentQuiz!=null) quizzes[currentQuiz]=quiz;
-  else quizzes.push(quiz);
-  localStorage.setItem("quizzes",JSON.stringify(quizzes));
-  go("list");
-}
-
-function delQuiz(i){
-  if(confirm("삭제?")){
-    quizzes.splice(i,1);
-    localStorage.setItem("quizzes",JSON.stringify(quizzes));
-    renderList();
-  }
-}
-
-function startQuiz(i){
-  currentQuiz=quizzes[i];
-  currentQuiz.groups.forEach(g=>g.score=0);
-  go("groupSelect");
-  renderGroups();
-}
-
-function renderGroups(){
-  groupSentence.textContent=currentQuiz.groups.map(g=>g.name).join("");
-  groupButtons.innerHTML="";
-  currentQuiz.groups.forEach((g,i)=>{
-    if(!g.done){
-      const b=document.createElement("div");
-      b.className="group-btn";
-      b.textContent=g.name;
-      b.onclick=()=>startGroup(i);
-      groupButtons.appendChild(b);
+    /* View Controller */
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        document.getElementById(viewId).classList.remove('hidden');
+        if(viewId === 'list-view') renderQuizList();
     }
-  });
-}
 
-function startGroup(i){
-  currentGroup=currentQuiz.groups[i];
-  currentGroup.done=true;
-  words=[...currentGroup.words].sort(()=>Math.random()-0.5);
-  score=0;
-  passLeft=currentQuiz.pass;
-  timeLeft=currentQuiz.time;
-  go("quiz");
-  countdown(3);
-}
+    /* Admin Logic */
+    function adjustCount(id, delta) {
+        const input = document.getElementById(id);
+        let val = parseInt(input.value) + delta;
+        if(val < parseInt(input.min)) val = input.min;
+        if(val > parseInt(input.max)) val = input.max;
+        input.value = val;
+        if(id === 'group-count') renderGroupInputs();
+    }
 
-function countdown(n){
-  word.textContent=n;
-  if(n>0)setTimeout(()=>countdown(n-1),1000);
-  else startGame();
-}
+    function renderGroupInputs() {
+        const container = document.getElementById('groups-container');
+        const count = parseInt(document.getElementById('group-count').value);
+        const wordCount = parseInt(document.getElementById('word-count').value);
+        container.innerHTML = '';
+        
+        for(let i=0; i<count; i++) {
+            const div = document.createElement('div');
+            div.className = 'group-config';
+            div.innerHTML = `
+                <label>${i+1}번 그룹 이름 (한글자 추천)</label>
+                <input type="text" class="g-name" maxlength="10" placeholder="예: 재" style="margin-bottom:10px">
+                <label>단어들 (쉼표로 구분)</label>
+                <textarea class="g-words" rows="3" placeholder="${wordCount}개의 단어를 입력하세요"></textarea>
+            `;
+            container.appendChild(div);
+        }
+    }
 
-function startGame(){
-  nextWord();
-  timer=setInterval(()=>{
-    timeLeft--;
-    timeView.textContent=`시간:${timeLeft}`;
-    if(timeLeft<=0) endGroup();
-  },1000);
-}
+    function openAdmin(idx = -1) {
+        editingIndex = idx;
+        renderGroupInputs();
+        if(idx > -1) {
+            const q = quizzes[idx];
+            document.getElementById('quiz-title-input').value = q.title;
+            document.getElementById('group-count').value = q.groups.length;
+            document.getElementById('word-count').value = q.wordCount;
+            document.getElementById('limit-time').value = q.time;
+            document.getElementById('pass-limit').value = q.pass;
+            renderGroupInputs();
+            const names = document.querySelectorAll('.g-name');
+            const words = document.querySelectorAll('.g-words');
+            q.groups.forEach((g, i) => {
+                names[i].value = g.name;
+                words[i].value = g.words.join(',');
+            });
+        }
+        showView('admin-view');
+    }
 
-function nextWord(){
-  if(words.length===0) return endGroup();
-  word.textContent=words.pop();
-  scoreView.textContent=`정답:${score}`;
-}
+    function saveQuiz() {
+        const title = document.getElementById('quiz-title-input').value;
+        const gCount = parseInt(document.getElementById('group-count').value);
+        const names = document.querySelectorAll('.g-name');
+        const words = document.querySelectorAll('.g-words');
+        
+        let groups = [];
+        for(let i=0; i<gCount; i++) {
+            if(!names[i].value || !words[i].value) return alert('모든 칸을 입력해주세요!');
+            groups.push({
+                name: names[i].value,
+                words: words[i].value.split(',').map(s => s.trim()).filter(s => s)
+            });
+        }
 
-function answer(ok){
-  if(ok) score++;
-  nextWord();
-}
+        const newQuiz = {
+            title,
+            time: parseInt(document.getElementById('limit-time').value),
+            pass: parseInt(document.getElementById('pass-limit').value),
+            wordCount: parseInt(document.getElementById('word-count').value),
+            groups
+        };
 
-function pass(){
-  if(passLeft<=0)return;
-  passLeft--;
-  nextWord();
-}
+        if(editingIndex > -1) quizzes[editingIndex] = newQuiz;
+        else quizzes.push(newQuiz);
 
-function endGroup(){
-  clearInterval(timer);
-  currentGroup.score=score;
-  go("groupSelect");
-  renderGroups();
-  if(currentQuiz.groups.every(g=>g.done)) showResult();
-}
+        localStorage.setItem('quizzes', JSON.stringify(quizzes));
+        showView('list-view');
+    }
 
-function showResult(){
-  go("result");
-  const r=document.getElementById("resultList");
-  r.innerHTML="";
-  const sorted=[...currentQuiz.groups].sort((a,b)=>b.score-a.score);
-  sorted.forEach((g,i)=>{
-    r.innerHTML+=`<p class="rank${i+1}">${i+1}위 ${g.name} : ${g.score}</p>`;
-  });
-}
+    /* List View Logic */
+    function renderQuizList() {
+        const container = document.getElementById('quiz-items-container');
+        container.innerHTML = quizzes.length ? '' : '<p style="text-align:center">등록된 퀴즈가 없습니다.</p>';
+        quizzes.forEach((q, i) => {
+            const item = document.createElement('div');
+            item.className = 'quiz-item';
+            item.innerHTML = `
+                <div><strong>${q.title}</strong> (${q.groups.length}그룹)</div>
+                <div>
+                    <button class="accent" onclick="startQuiz(${i})">시작</button>
+                    <button onclick="openAdmin(${i})">수정</button>
+                    <button class="secondary" onclick="deleteQuiz(${i})">삭제</button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function deleteQuiz(i) {
+        if(confirm('정말 삭제하시겠습니까?')) {
+            quizzes.splice(i, 1);
+            localStorage.setItem('quizzes', JSON.stringify(quizzes));
+            renderQuizList();
+        }
+    }
+
+    /* Game Logic */
+    function startQuiz(idx) {
+        currentQuiz = quizzes[idx];
+        results = [];
+        playedGroups.clear();
+        showSelection();
+    }
+
+    function showSelection() {
+        showView('selection-view');
+        const sentence = currentQuiz.groups.map(g => g.name).join(' ');
+        document.getElementById('sentence-display').innerText = sentence;
+        
+        const container = document.getElementById('group-buttons-container');
+        container.innerHTML = '';
+        currentQuiz.groups.forEach((g, i) => {
+            if(playedGroups.has(i)) return;
+            const btn = document.createElement('button');
+            btn.innerText = g.name;
+            btn.style.padding = "20px";
+            btn.onclick = () => prepareGame(i);
+            container.appendChild(btn);
+        });
+
+        if(playedGroups.size === currentQuiz.groups.length) {
+            showResults();
+        }
+    }
+
+    function prepareGame(groupIdx) {
+        playingGroupIdx = groupIdx;
+        showView('play-view');
+        
+        // Reset state
+        currentWords = [...currentQuiz.groups[groupIdx].words].sort(() => Math.random() - 0.5);
+        currentWordIdx = 0;
+        currentCorrect = 0;
+        currentPasses = currentQuiz.pass;
+        timeLeft = currentQuiz.time;
+        
+        document.getElementById('current-score').innerText = '0';
+        document.getElementById('pass-count').innerText = currentPasses;
+        document.getElementById('timer-display').innerText = timeLeft;
+        document.getElementById('word-display').innerText = 'READY';
+        
+        // Countdown
+        const cd = document.getElementById('countdown');
+        cd.classList.remove('hidden');
+        let cnt = 3;
+        cd.innerText = cnt;
+        const intrvl = setInterval(() => {
+            cnt--;
+            if(cnt > 0) cd.innerText = cnt;
+            else {
+                clearInterval(intrvl);
+                cd.classList.add('hidden');
+                runGame();
+            }
+        }, 1000);
+    }
+
+    function runGame() {
+        nextWord();
+        gameTimer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').innerText = timeLeft;
+            if(timeLeft <= 0) endGame();
+        }, 1000);
+    }
+
+    function nextWord() {
+        if(currentWordIdx >= currentWords.length) {
+            endGame();
+            return;
+        }
+        document.getElementById('word-display').innerText = currentWords[currentWordIdx];
+    }
+
+    function handleAnswer(isCorrect) {
+        if(isCorrect) {
+            currentCorrect++;
+            document.getElementById('current-score').innerText = currentCorrect;
+        }
+        currentWordIdx++;
+        nextWord();
+    }
+
+    function handlePass() {
+        if(currentPasses > 0) {
+            currentPasses--;
+            document.getElementById('pass-count').innerText = currentPasses;
+            currentWordIdx++;
+            nextWord();
+        } else {
+            alert('남은 패스 횟수가 없습니다!');
+        }
+    }
+
+    function endGame() {
+        clearInterval(gameTimer);
+        alert(`종료! 정답 개수: ${currentCorrect}`);
+        results.push({ name: currentQuiz.groups[playingGroupIdx].name, score: currentCorrect });
+        playedGroups.add(playingGroupIdx);
+        showSelection();
+    }
+
+    /* Result & Bonus Logic */
+    function showResults() {
+        showView('result-view');
+        const sorted = [...results].sort((a,b) => b.score - a.score);
+        const container = document.getElementById('rankings-list');
+        container.innerHTML = '';
+
+        sorted.forEach((r, i) => {
+            const div = document.createElement('div');
+            div.className = `rank-item ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}`;
+            div.innerHTML = `<span>${i+1}위: ${r.name}</span> <span>${r.score}점</span>`;
+            container.appendChild(div);
+        });
+
+        // Check for tie in top ranks
+        const bonusArea = document.getElementById('bonus-area');
+        if(sorted.length > 1 && sorted[0].score === sorted[1].score) {
+            bonusArea.classList.remove('hidden');
+        } else {
+            bonusArea.classList.add('hidden');
+        }
+    }
+
+    function startBonusGame() {
+        // Create 2 random groups for tie-breaker
+        const allWords = currentQuiz.groups.flatMap(g => g.words);
+        const bonusGroups = [
+            { name: "보너스A", words: allWords.sort(() => Math.random() - 0.5).slice(0, 10) },
+            { name: "보너스B", words: allWords.sort(() => Math.random() - 0.5).slice(0, 10) }
+        ];
+        
+        currentQuiz = { ...currentQuiz, groups: bonusGroups };
+        results = [];
+        playedGroups.clear();
+        showSelection();
+    }
+
+    // Initialize
+    renderQuizList();
 </script>
+
 </body>
 </html>
