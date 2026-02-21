@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Speed Quiz Pro</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
@@ -15,59 +15,76 @@
             --card: #ffffff;
             --text-main: #1e293b;
             --text-sub: #64748b;
-            --radius: 16px;
+            --radius: 12px;
             --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text-main); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
 
+        /* 16:9 비율 컨테이너 */
         .app-container {
-            width: 100%; max-width: 480px; height: 92vh; background: var(--card); border-radius: 30px;
-            box-shadow: var(--shadow); position: relative; display: flex; flex-direction: column; overflow: hidden; margin: 10px;
+            width: 1280px; /* 720 * 1.77 */
+            height: 720px;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* 좌측 상단 로고 */
         .header-logo {
-            position: absolute; top: 20px; left: 24px; font-weight: 800; font-size: 1.1rem; color: var(--primary); z-index: 10;
+            position: absolute; top: 30px; left: 40px; font-weight: 800; font-size: 1.5rem; color: var(--primary); z-index: 10;
         }
 
-        /* 실시간 타이머 바 */
         .timer-progress-wrap {
-            width: 100%; height: 8px; background: #e2e8f0; position: absolute; top: 0; left: 0;
+            width: 100%; height: 12px; background: #e2e8f0; position: absolute; top: 0; left: 0;
         }
         #timer-progress-bar {
             width: 100%; height: 100%; background: var(--success); transition: width 0.1s linear, background-color 0.3s;
         }
 
-        .view { padding: 24px; padding-top: 50px; flex-grow: 1; display: flex; flex-direction: column; animation: slideIn 0.3s ease-out; overflow-y: auto; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view { padding: 60px 80px; flex-grow: 1; display: flex; flex-direction: column; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .hidden { display: none !important; }
 
-        .btn { border: none; border-radius: var(--radius); padding: 16px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn:active { transform: scale(0.95); }
+        .btn { border: none; border-radius: var(--radius); padding: 18px 30px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn:hover { filter: brightness(0.95); }
+        .btn:active { transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--text-sub); }
 
         #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.1s; }
-        .flash-success { background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(255,255,255,0) 70%); opacity: 1 !important; }
-        .flash-danger { background: radial-gradient(circle, rgba(239,68,68,0.2) 0%, rgba(255,255,255,0) 70%); opacity: 1 !important; }
+        .flash-success { background: rgba(16, 185, 129, 0.15); opacity: 1 !important; }
+        .flash-danger { background: rgba(239, 68, 68, 0.15); opacity: 1 !important; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
-        .modal-content { background: white; padding: 30px; border-radius: 24px; width: 80%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 500px; text-align: center; }
 
-        .timer-badge { font-size: 3rem; font-weight: 900; color: var(--text-main); text-align: center; margin-bottom: 10px; }
-        .word-card { background: #f8fafc; border-radius: 24px; height: 220px; display: flex; align-items: center; justify-content: center; font-size: 3.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 30px; border: 1px solid #e2e8f0; text-align: center; padding: 20px; }
+        .word-card { 
+            background: #f8fafc; border-radius: 30px; flex-grow: 1; display: flex; align-items: center; justify-content: center; 
+            font-size: 6rem; font-weight: 800; color: var(--text-main); margin: 30px 0; border: 2px solid #e2e8f0; 
+        }
 
-        .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; height: 180px; margin: 40px 0; }
-        .podium-bar { flex: 1; border-radius: 12px 12px 4px 4px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 10px; color: white; font-weight: 700; animation: growUp 0.8s ease-out forwards; transform-origin: bottom; }
-        .gold { background: var(--warning); height: 100%; order: 2; }
-        .silver { background: #cbd5e1; height: 70%; order: 1; color: #475569; }
-        .bronze { background: #d97706; height: 45%; order: 3; }
-
-        .group-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .group-item { aspect-ratio: 1; border-radius: 20px; border: 2px solid #f1f5f9; background: white; font-size: 1.5rem; font-weight: 800; color: var(--primary); cursor: pointer; transition: 0.2s; }
+        .podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; height: 300px; margin: 50px 0; }
+        .podium-bar { width: 150px; border-radius: 12px 12px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 20px; color: white; font-weight: 700; }
+        
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .group-item { padding: 40px; border-radius: 20px; border: 3px solid #f1f5f9; background: white; font-size: 2rem; font-weight: 800; color: var(--primary); cursor: pointer; text-align: center; }
         .group-item.done { opacity: 0.3; background: #f1f5f9; cursor: default; }
+
+        input, textarea { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -75,75 +92,105 @@
 <div class="app-container">
     <div class="header-logo">Speed-Quiz</div>
     <div id="flash-overlay"></div>
-    <div id="toast" style="position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; z-index: 200; opacity: 0; transition: 0.3s; pointer-events: none;">메시지</div>
 
     <div id="modal-container" class="modal-overlay hidden">
         <div class="modal-content">
-            <h2 id="modal-title" style="margin-top:0">알림</h2>
-            <p id="modal-body" style="color: var(--text-sub); line-height: 1.5;"></p>
+            <h2 id="modal-title">알림</h2>
+            <p id="modal-body" style="color: var(--text-sub); margin-bottom: 30px;"></p>
             <button class="btn btn-primary" style="width:100%" onclick="closeModal()">확인</button>
         </div>
     </div>
 
     <div id="main-view" class="view">
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 70px; margin-bottom: 10px;">⚡</div>
-            <h1 style="font-size: 2.2rem; margin: 0;">Speed Quiz</h1>
-            <p style="color: var(--text-sub); margin-bottom: 40px;">더 빠르고 스마트한 진행</p>
-            <button class="btn btn-primary" style="width: 100%;" onclick="showView('list-view')">퀴즈 시작하기</button>
+            <h1 style="font-size: 4rem; margin: 0;">Speed Quiz</h1>
+            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 50px;">더 빠르고 스마트한 진행</p>
+            <button class="btn btn-primary" style="width: 400px; font-size: 1.5rem;" onclick="showView('list-view')">시작하기</button>
         </div>
     </div>
 
     <div id="list-view" class="view hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0">나의 퀴즈</h2>
-            <button class="btn btn-outline" style="padding:8px 15px;" onclick="showView('main-view')">홈</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
+            <h2 style="font-size: 2.5rem; margin:0">퀴즈 세트</h2>
+            <button class="btn btn-outline" onclick="showView('main-view')">홈으로</button>
         </div>
-        <div id="quiz-list-items" style="flex-grow: 1;"></div>
-        <button class="btn btn-primary" onclick="openAdmin()">+ 새 퀴즈 생성</button>
-    </div>
-
-    <div id="selection-view" class="view hidden">
-        <h3 style="text-align:center; color:var(--text-sub);">그룹을 선택하세요</h3>
-        <div id="sentence-display" style="font-size: 1.8rem; text-align: center; margin-bottom: 30px; font-weight: 800; color: var(--primary); letter-spacing: 5px;"></div>
-        <div class="group-grid" id="group-buttons-container"></div>
-    </div>
-
-    <div id="play-view" class="view hidden" style="padding-top: 30px;">
-        <div class="timer-progress-wrap"><div id="timer-progress-bar"></div></div>
-        <div class="timer-badge" id="timer-display">60</div>
-        <div style="text-align: center; margin-bottom: 10px; font-weight: 600; color: var(--text-sub);">정답: <span id="current-score" style="color:var(--success)">0</span></div>
-        <div class="word-card" id="word-display">READY</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <button class="btn btn-primary" style="background: var(--success); height: 80px;" onclick="handleAnswer(true)">O 정답</button>
-            <button class="btn btn-primary" style="background: var(--danger); height: 80px;" onclick="handleAnswer(false)">X 오답</button>
-            <button id="pass-btn" class="btn btn-outline" style="grid-column: span 2; background: white;" onclick="handlePass()">패스 (<span id="pass-count">0</span>)</button>
-        </div>
+        <div id="quiz-list-items" style="flex-grow: 1; overflow-y: auto;"></div>
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="openAdmin()">새 퀴즈 세트 추가</button>
     </div>
 
     <div id="admin-view" class="view hidden">
-        <h2>퀴즈 설정</h2>
-        <div style="flex-grow: 1; overflow-y: auto;">
-            <input type="text" id="quiz-title-input" placeholder="퀴즈 제목" style="margin-bottom:15px; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px;">
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="number" id="group-count" value="3" onchange="renderGroupInputs()" placeholder="그룹수" style="width:50%; padding:12px; border-radius:10px; border:1px solid #ddd;">
-                <input type="number" id="limit-time" value="60" placeholder="시간(초)" style="width:50%; padding:12px; border-radius:10px; border:1px solid #ddd;">
+        <h2 id="admin-title" style="font-size: 2rem;">퀴즈 설정</h2>
+        <div style="flex-grow: 1; overflow-y: auto; padding-right: 20px;">
+            <input type="text" id="quiz-title-input" placeholder="퀴즈 제목">
+            <div style="display:flex; gap:20px;">
+                <div style="flex:1">
+                    <label>그룹 수</label>
+                    <input type="number" id="group-count" value="3" onchange="renderGroupInputs()">
+                </div>
+                <div style="flex:1">
+                    <label>제한 시간 (초)</label>
+                    <input type="number" id="limit-time" value="60">
+                </div>
             </div>
             <div id="groups-container"></div>
         </div>
-        <button class="btn btn-primary" onclick="saveQuiz()" style="margin-top:10px;">설정 완료</button>
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn btn-outline" style="flex:1" onclick="showView('list-view')">취소</button>
+            <button class="btn btn-primary" style="flex:2" onclick="saveQuiz()">저장 완료</button>
+        </div>
+    </div>
+
+    <div id="selection-view" class="view hidden">
+        <h2 style="text-align:center; font-size: 2rem; color:var(--text-sub);">차례를 선택하세요</h2>
+        <div id="sentence-display" style="font-size: 3rem; text-align: center; margin: 50px 0; font-weight: 800; color: var(--primary);"></div>
+        <div class="grid-3" id="group-buttons-container" style="margin-top: auto; margin-bottom: auto;"></div>
+    </div>
+
+    <div id="ready-view" class="view hidden">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <div id="ready-group-name" style="font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 20px;">그룹 이름</div>
+            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 60px;">준비가 되었다면 아래 시작 버튼을 눌러주세요.</p>
+            <button class="btn btn-primary" style="width: 400px; height: 100px; font-size: 2.5rem;" onclick="startCountdown()">퀴즈 시작</button>
+        </div>
+    </div>
+
+    <div id="play-view" class="view hidden">
+        <div class="timer-progress-wrap"><div id="timer-progress-bar"></div></div>
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <div id="timer-display" style="font-size: 3.5rem; font-weight: 900;">60</div>
+            <div style="font-size: 2rem; font-weight: 700;">정답 수: <span id="current-score" style="color:var(--success)">0</span></div>
+        </div>
+        <div class="word-card" id="word-display">READY</div>
+        <div id="play-controls" class="grid-3" style="height: 120px;">
+            <button class="btn btn-primary" style="background: var(--success); font-size: 2rem;" onclick="handleAnswer(true)">정답</button>
+            <button class="btn btn-primary" style="background: var(--danger); font-size: 2rem;" onclick="handleAnswer(false)">오답</button>
+            <button class="btn btn-outline" style="font-size: 1.5rem;" onclick="handlePass()">패스 (<span id="pass-count">0</span>)</button>
+        </div>
     </div>
 
     <div id="result-view" class="view hidden">
-        <h2 style="text-align:center">최종 랭킹</h2>
+        <h2 style="text-align:center; font-size: 3rem;">최종 결과</h2>
         <div class="podium" id="podium-area"></div>
-        <button class="btn btn-outline" style="width: 100%;" onclick="showView('main-view')">메인으로</button>
+        <button class="btn btn-outline" style="width: 300px; margin: 40px auto 0;" onclick="showView('main-view')">메인으로</button>
     </div>
 </div>
 
 <script>
-    let quizzes = JSON.parse(localStorage.getItem('quizzes_v3')) || [];
-    let state = { currentQuiz: null, playingIdx: -1, results: [], played: new Set(), timer: null, timeLeft: 0, totalTime: 0, wordIdx: 0, score: 0, passes: 0, words: [] };
+    let quizzes = JSON.parse(localStorage.getItem('quizzes_v4')) || [];
+    let state = { 
+        currentQuiz: null, 
+        currentQuizIdx: -1, 
+        playingIdx: -1, 
+        results: [], 
+        played: new Set(), 
+        timer: null, 
+        timeLeft: 0, 
+        totalTime: 0, 
+        wordIdx: 0, 
+        score: 0, 
+        passes: 0, 
+        words: [] 
+    };
 
     function showAlert(title, body) {
         document.getElementById('modal-title').innerText = title;
@@ -151,11 +198,6 @@
         document.getElementById('modal-container').classList.remove('hidden');
     }
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.style.opacity = '1';
-        setTimeout(() => t.style.opacity = '0', 2000);
-    }
 
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -166,16 +208,21 @@
     function renderQuizList() {
         const container = document.getElementById('quiz-list-items');
         container.innerHTML = quizzes.map((q, i) => `
-            <div style="background:#f8fafc; padding:15px; border-radius:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                <div><div style="font-weight:700;">${q.title}</div><div style="font-size:0.8rem; color:#94a3b8;">${q.groups.length} Groups</div></div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn btn-primary" style="padding:8px 15px;" onclick="startQuiz(${i})">시작</button>
-                    <button class="btn btn-outline" style="padding:8px;" onclick="deleteQuiz(${i})">🗑️</button>
+            <div style="background:#f8fafc; padding:25px; border-radius:15px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #e2e8f0;">
+                <div>
+                    <div style="font-weight:700; font-size: 1.4rem;">${q.title}</div>
+                    <div style="color:#94a3b8;">그룹 ${q.groups.length}개 / 시간 ${q.time}초</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-primary" onclick="startQuiz(${i})">시작</button>
+                    <button class="btn btn-outline" onclick="openAdmin(${i})">수정</button>
+                    <button class="btn btn-outline" style="color:var(--danger)" onclick="deleteQuiz(${i})">삭제</button>
                 </div>
             </div>
         `).join('');
     }
 
+    // 퀴즈 시작 (선택 단계)
     function startQuiz(idx) {
         state.currentQuiz = quizzes[idx];
         state.results = []; state.played.clear();
@@ -187,34 +234,47 @@
         document.getElementById('sentence-display').innerText = state.currentQuiz.groups.map(g => g.name).join(' ');
         const container = document.getElementById('group-buttons-container');
         container.innerHTML = state.currentQuiz.groups.map((g, i) => `
-            <button class="group-item ${state.played.has(i)?'done':''}" onclick="${state.played.has(i)?'':'prepareGame('+i+')'}">${g.name}</button>
+            <button class="group-item ${state.played.has(i)?'done':''}" onclick="${state.played.has(i)?'':'prepareReadyStep('+i+')'}">${g.name}</button>
         `).join('');
         if(state.played.size === state.currentQuiz.groups.length) showResults();
     }
 
-    function prepareGame(idx) {
+    // [추가] 준비 단계 화면
+    function prepareReadyStep(idx) {
         state.playingIdx = idx;
-        state.words = [...state.currentQuiz.groups[idx].words].sort(() => Math.random() - 0.5);
+        document.getElementById('ready-group-name').innerText = state.currentQuiz.groups[idx].name;
+        showView('ready-view');
+    }
+
+    // [변경] 카운트다운 시작
+    function startCountdown() {
+        showView('play-view');
+        state.words = [...state.currentQuiz.groups[state.playingIdx].words].sort(() => Math.random() - 0.5);
         state.wordIdx = 0; state.score = 0;
         state.totalTime = parseInt(state.currentQuiz.time);
         state.timeLeft = state.totalTime;
-        state.passes = state.currentQuiz.pass || 3;
-        showView('play-view');
+        state.passes = 3;
+        
+        document.getElementById('play-controls').style.visibility = 'hidden'; // 카운트다운 중 클릭 방지
         updatePlayUI();
         
         let cnt = 3;
         const disp = document.getElementById('word-display');
         const countTimer = setInterval(() => {
-            disp.innerText = cnt > 0 ? cnt : 'GO!';
-            if(cnt < 0) { clearInterval(countTimer); runGame(); }
+            disp.innerText = cnt > 0 ? cnt : 'GO';
+            if(cnt < 0) { 
+                clearInterval(countTimer); 
+                document.getElementById('play-controls').style.visibility = 'visible';
+                runGame(); 
+            }
             cnt--;
-        }, 800);
+        }, 1000);
     }
 
     function runGame() {
         nextWord();
         state.timer = setInterval(() => {
-            state.timeLeft -= 0.1; // 실시간 느낌을 위해 0.1초씩 감소
+            state.timeLeft -= 0.1;
             updatePlayUI();
             if(state.timeLeft <= 0) endGame();
         }, 100);
@@ -223,16 +283,12 @@
     function updatePlayUI() {
         const bar = document.getElementById('timer-progress-bar');
         const ratio = (state.timeLeft / state.totalTime) * 100;
-        
-        // 바 길이 업데이트
         bar.style.width = Math.max(0, ratio) + '%';
-        
-        // 바 색상 실시간 변경
         if (ratio > 50) bar.style.backgroundColor = 'var(--success)';
         else if (ratio > 20) bar.style.backgroundColor = 'var(--warning)';
         else bar.style.backgroundColor = 'var(--danger)';
 
-        document.getElementById('timer-display').innerText = Math.ceil(state.timeLeft);
+        document.getElementById('timer-display').innerText = Math.ceil(Math.max(0, state.timeLeft));
         document.getElementById('current-score').innerText = state.score;
         document.getElementById('pass-count').innerText = state.passes;
     }
@@ -252,14 +308,13 @@
 
     function handlePass() {
         if(state.passes > 0) { state.passes--; state.wordIdx++; updatePlayUI(); nextWord(); }
-        else { showToast("패스 기회를 모두 사용했습니다!"); }
     }
 
     function endGame() {
         clearInterval(state.timer);
         state.results.push({ name: state.currentQuiz.groups[state.playingIdx].name, score: state.score });
         state.played.add(state.playingIdx);
-        showAlert("라운드 종료", `${state.currentQuiz.groups[state.playingIdx].name} 그룹: ${state.score}점!`);
+        showAlert("종료", `${state.currentQuiz.groups[state.playingIdx].name} 그룹: ${state.score}점`);
         showSelection();
     }
 
@@ -269,27 +324,63 @@
         const podium = document.getElementById('podium-area');
         podium.innerHTML = '';
         const order = [1, 0, 2];
-        const classes = ['silver', 'gold', 'bronze'];
+        const classes = ['#cbd5e1', '#f59e0b', '#d97706']; // 실버, 골드, 브론즈 색상
+        const heights = ['180px', '250px', '140px'];
+        
         order.forEach((pos, i) => {
             if(sorted[pos]) {
                 const bar = document.createElement('div');
-                bar.className = `podium-bar ${classes[i]}`;
-                bar.innerHTML = `<span style="font-size:0.7rem">${pos+1}위</span><div style="font-size:1.2rem">${sorted[pos].name}</div><div>${sorted[pos].score}점</div>`;
+                bar.className = `podium-bar`;
+                bar.style.height = heights[i];
+                bar.style.backgroundColor = classes[i];
+                bar.style.order = i;
+                bar.innerHTML = `<div>${pos+1}위</div><div style="font-size:1.5rem">${sorted[pos].name}</div><div>${sorted[pos].score}점</div>`;
                 podium.appendChild(bar);
             }
         });
     }
 
-    function openAdmin() { showView('admin-view'); renderGroupInputs(); }
+    /* 관리자 및 수정 기능 */
+    function openAdmin(idx = -1) {
+        state.currentQuizIdx = idx;
+        const titleInput = document.getElementById('quiz-title-input');
+        const groupCount = document.getElementById('group-count');
+        const timeLimit = document.getElementById('limit-time');
+        
+        if(idx > -1) {
+            const q = quizzes[idx];
+            titleInput.value = q.title;
+            groupCount.value = q.groups.length;
+            timeLimit.value = q.time;
+            document.getElementById('admin-title').innerText = "퀴즈 수정하기";
+        } else {
+            titleInput.value = "";
+            groupCount.value = 3;
+            timeLimit.value = 60;
+            document.getElementById('admin-title').innerText = "새 퀴즈 세트 추가";
+        }
+        showView('admin-view');
+        renderGroupInputs();
+        
+        if(idx > -1) {
+            const q = quizzes[idx];
+            const names = document.querySelectorAll('.g-name');
+            const words = document.querySelectorAll('.g-words');
+            q.groups.forEach((g, i) => {
+                if(names[i]) names[i].value = g.name;
+                if(words[i]) words[i].value = g.words.join(', ');
+            });
+        }
+    }
 
     function renderGroupInputs() {
         const c = document.getElementById('groups-container');
         const count = document.getElementById('group-count').value;
         c.innerHTML = '';
         for(let i=0; i<count; i++) {
-            c.innerHTML += `<div style="margin-bottom:10px; background:#f1f5f9; padding:10px; border-radius:10px;">
-                <input type="text" class="g-name" placeholder="그룹명" style="width:100%; margin-bottom:5px; border:none; padding:8px; border-radius:5px;">
-                <textarea class="g-words" placeholder="단어들 (콤마로 구분)" style="width:100%; border:none; padding:8px; border-radius:5px;"></textarea>
+            c.innerHTML += `<div style="margin-bottom:20px; background:#f1f5f9; padding:20px; border-radius:10px;">
+                <input type="text" class="g-name" placeholder="그룹 이름 (예: A팀)">
+                <textarea class="g-words" placeholder="퀴즈 단어들을 콤마(,)로 구분해서 입력하세요" rows="2"></textarea>
             </div>`;
         }
     }
@@ -302,15 +393,25 @@
         names.forEach((n, i) => {
             if(n.value) groups.push({ name: n.value, words: words[i].value.split(',').map(s=>s.trim()) });
         });
-        quizzes.push({ title, groups, time: document.getElementById('limit-time').value, pass: 3 });
-        localStorage.setItem('quizzes_v3', JSON.stringify(quizzes));
+        
+        const quizData = { title, groups, time: document.getElementById('limit-time').value };
+        
+        if(state.currentQuizIdx > -1) {
+            quizzes[state.currentQuizIdx] = quizData;
+        } else {
+            quizzes.push(quizData);
+        }
+        
+        localStorage.setItem('quizzes_v4', JSON.stringify(quizzes));
         showView('list-view');
     }
 
     function deleteQuiz(i) {
-        quizzes.splice(i, 1);
-        localStorage.setItem('quizzes_v3', JSON.stringify(quizzes));
-        renderQuizList();
+        if(confirm("정말 삭제하시겠습니까?")) {
+            quizzes.splice(i, 1);
+            localStorage.setItem('quizzes_v4', JSON.stringify(quizzes));
+            renderQuizList();
+        }
     }
 </script>
 </body>
