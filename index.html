@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Quiz Pro - History Guide</title>
+    <title>Speed Quiz Pro - History Edition</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         :root {
@@ -28,7 +28,6 @@
         }
         .guide-trigger:hover { background: var(--primary); color: white; }
 
-        /* 단계별 가이드 오버레이 */
         #onboarding-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); z-index: 2000; display: none;
@@ -44,7 +43,7 @@
             border-right-color: white; right: 100%; top: 30px;
         }
 
-        .highlight-el { position: relative; z-index: 2001 !important; background: white !important; box-shadow: 0 0 0 15px white, 0 0 50px rgba(255,255,255,0.6) !important; pointer-events: none; border-radius: 8px; }
+        .highlight-el { position: relative; z-index: 2001 !important; background: white !important; box-shadow: 0 0 0 15px white, 0 0 50px rgba(255,255,255,0.6) !important; border-radius: 8px; }
 
         .view { padding: 50px 100px; flex-grow: 1; display: flex; flex-direction: column; height: 100%; }
         .hidden { display: none !important; }
@@ -60,7 +59,7 @@
 <body>
 
 <div class="app-container">
-    <div class="header-logo" style="cursor:pointer;" onclick="showView('main-view')">Speed-Quiz</div>
+    <div class="header-logo" style="cursor:pointer; position:absolute; top:30px; left:40px; font-weight:800; font-size:1.4rem; color:var(--primary);" onclick="showView('main-view')">Speed-Quiz</div>
     <div class="guide-trigger" onclick="startOnboarding(true)">?</div>
 
     <div id="onboarding-overlay">
@@ -77,7 +76,7 @@
     <div id="main-view" class="view">
         <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <h1 style="font-size: 5rem; margin: 0; color: var(--primary);">Speed Quiz</h1>
-            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 60px;">더 화려하게 즐기는 팀 대항 퀴즈</p>
+            <p style="font-size: 1.5rem; color: var(--text-sub); margin-bottom: 60px;">팀 대항 역사 퀴즈 메이커</p>
             <button class="btn btn-primary" style="width:250px; font-size:1.5rem;" onclick="showView('list-view')">퀴즈 목록</button>
         </div>
     </div>
@@ -104,7 +103,7 @@
                 </div>
                 
                 <div id="guide-target-2" style="display:flex; gap:30px;">
-                    <div style="flex:1"><label class="form-label">참가 그룹 수</label><input type="number" id="group-count" value="3" onchange="renderGroupInputs()" class="form-input"></div>
+                    <div style="flex:1"><label class="form-label">참가 그룹 수 (최대 8개 권장)</label><input type="number" id="group-count" value="4" min="1" max="15" onchange="renderGroupInputs()" class="form-input"></div>
                     <div style="flex:1"><label class="form-label">제한 시간 (초)</label><input type="number" id="limit-time" value="60" class="form-input"></div>
                 </div>
 
@@ -114,33 +113,32 @@
             </div>
         </div>
         <div style="text-align: center; padding-top:20px;">
-            <button class="btn btn-primary" style="width: 300px; font-size:1.3rem;" onclick="saveQuiz()">퀴즈 저장하기</button>
+            <button class="btn btn-primary" style="width: 300px; font-size:1.3rem;" onclick="saveQuiz()">저장하기</button>
         </div>
     </div>
 </div>
 
 <script>
-    let quizzes = JSON.parse(localStorage.getItem('quizzes_v13')) || [];
+    let quizzes = JSON.parse(localStorage.getItem('quizzes_v14')) || [];
     let state = { currentIdx: 0 };
+    // 요청하신 그룹 이름 배열
+    const defaultGroupNames = ['재', '미', '있', '는', '역', '사', '퀴', '즈'];
 
     const guideSteps = [
         {
             targetId: 'guide-target-1',
             title: '퀴즈 제목 설정',
             desc: "가장 먼저 퀴즈의 이름을 정해주세요. 예시처럼 <strong style='color:#4f46e5'>'규명 T의 역사 퀴즈'</strong>와 같이 입력하면 목록에서 쉽게 찾을 수 있습니다.",
-            pos: 'right'
         },
         {
             targetId: 'guide-target-2',
             title: '대항전 규칙',
-            desc: "몇 개의 팀이 대결할지, 한 팀당 주어지는 시간은 몇 초일지 결정합니다. 역사 퀴즈라면 팀당 60초 정도가 적당합니다.",
-            pos: 'right'
+            desc: "몇 개의 팀이 대결할지, 한 팀당 주어지는 시간은 몇 초일지 결정합니다.",
         },
         {
             targetId: 'guide-target-3',
-            title: '역사 단어 입력',
-            desc: "각 팀별로 출제될 단어를 입력하세요. <br>'거북선, 빗살무늬토기, 첨성대' 처럼 콤마(,)로 구분하여 입력하면 무작위로 출제됩니다.",
-            pos: 'right'
+            title: '팀 이름과 단어 입력',
+            desc: "팀 이름은 <strong style='color:#4f46e5'>'재, 미, 있, 는...'</strong> 순으로 자동 설정됩니다. 각 팀별로 출제될 역사 단어들을 입력해주세요.",
         }
     ];
 
@@ -149,7 +147,7 @@
         document.getElementById(id).classList.remove('hidden');
         if(id === 'list-view') renderQuizList();
         if(id === 'admin-view') {
-            const skip = localStorage.getItem('skip_onboarding_history');
+            const skip = localStorage.getItem('skip_onboarding_v14');
             if(!skip) setTimeout(() => startOnboarding(), 400);
         }
     }
@@ -187,7 +185,7 @@
 
     function finishOnboarding() {
         if(document.getElementById('guide-skip-forever').checked) {
-            localStorage.setItem('skip_onboarding_history', 'true');
+            localStorage.setItem('skip_onboarding_v14', 'true');
         }
         document.getElementById('onboarding-overlay').style.display = 'none';
         document.querySelectorAll('.highlight-el').forEach(el => el.classList.remove('highlight-el'));
@@ -198,9 +196,9 @@
         container.innerHTML = quizzes.length ? quizzes.map((q, i) => `
             <div style="background:#f8fafc; padding:25px; border-radius:18px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #e2e8f0;">
                 <div><div style="font-weight:700; font-size: 1.5rem;">${q.title}</div><div style="color:var(--text-sub); margin-top:5px;">${q.groups.length}개 팀 참여</div></div>
-                <button class="btn btn-outline" onclick="openAdmin(${i})">수정하기</button>
+                <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="alert('게임 시작 로직 연결')">시작</button><button class="btn btn-outline" onclick="openAdmin(${i})">수정</button></div>
             </div>
-        `).join('') : '<p style="text-align:center; color:var(--text-sub);">등록된 퀴즈가 없습니다. 새로 만들어보세요!</p>';
+        `).join('') : '<p style="text-align:center; color:var(--text-sub);">등록된 퀴즈가 없습니다.</p>';
     }
 
     function openAdmin(idx = -1) {
@@ -220,14 +218,19 @@
         }
     }
 
+    // 그룹 입력창 렌더링 함수 (요청하신 이름 로직 적용)
     function renderGroupInputs() {
         const c = document.getElementById('groups-container');
-        const count = document.getElementById('group-count').value;
+        const count = parseInt(document.getElementById('group-count').value) || 0;
         c.innerHTML = '';
         for(let i=0; i<count; i++) {
+            // 인덱스에 따라 '재', '미', '있', '는', '역', '사', '퀴', '즈' 순서로 이름 결정
+            const groupName = defaultGroupNames[i % defaultGroupNames.length];
             c.innerHTML += `<div style="margin-bottom:20px; background:#f8fafc; padding:20px; border-radius:15px; border: 1px solid #e2e8f0;">
-                <label class="form-label">팀명 (예: 고구려 팀)</label><input type="text" class="g-name" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;">
-                <label class="form-label">퀴즈 단어들</label><textarea class="g-words" placeholder="거북선, 직지심체요절, 세종대왕..." style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+                <label class="form-label">그룹 ${i+1} 이름</label>
+                <input type="text" class="g-name" value="${groupName}" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd; font-weight:bold; color:var(--primary);">
+                <label class="form-label">출제 단어 (쉼표 구분)</label>
+                <textarea class="g-words" placeholder="거북선, 훈민정음, 고려청자..." style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
             </div>`;
         }
     }
@@ -241,7 +244,7 @@
         names.forEach((n, i) => { if(n.value) groups.push({ name: n.value, words: words[i].value.split(',').map(s=>s.trim()).filter(s=>s) }); });
         const data = { title, groups, time: document.getElementById('limit-time').value };
         if(state.currentIdx > -1) quizzes[state.currentIdx] = data; else quizzes.push(data);
-        localStorage.setItem('quizzes_v13', JSON.stringify(quizzes));
+        localStorage.setItem('quizzes_v14', JSON.stringify(quizzes));
         showView('list-view');
     }
 </script>
