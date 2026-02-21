@@ -21,32 +21,19 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* 공통 버튼 */
-        .btn { border: none; border-radius: 12px; padding: 12px 24px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn { border: none; border-radius: 12px; padding: 12px 24px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); }
+        .btn-outline { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--text-sub); }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-warning { background: var(--warning); color: white; }
-        .btn-outline { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--text-sub); }
-
-        /* 게임 보드 및 단어 연출 */
-        #word-display-box { font-size: 11rem; font-weight: 900; color: var(--primary); flex-grow: 1; display: flex; align-items: center; justify-content: center; text-align: center; }
-        #feedback-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 15rem; font-weight: 900; pointer-events: none; z-index: 5000; opacity: 0; white-space: nowrap; }
-        .pop-up { animation: popUpEffect 0.6s ease-out forwards; }
-        @keyframes popUpEffect {
-            0% { opacity: 0; transform: translate(-50%, -40%) scale(0.5); }
-            30% { opacity: 1; transform: translate(-50%, -55%) scale(1.1); }
-            100% { opacity: 0; transform: translate(-50%, -70%) scale(1.2); }
-        }
 
         /* 퀴즈 제작 카드 */
         .admin-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 15px; }
         .form-input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; margin-top: 5px; outline: none; background: white; }
 
-        /* ✨ 신개념 가이드 시스템 레이어 */
-        #guide-overlay {
-            position: fixed; inset: 0; z-index: 10000; display: none; pointer-events: none;
-        }
-        /* 구멍 뚫린 어두운 배경 */
+        /* ✨ 가이드 시스템 레이어 */
+        #guide-overlay { position: fixed; inset: 0; z-index: 10000; display: none; pointer-events: none; }
         #guide-mask {
             position: absolute; inset: 0; background: rgba(0,0,0,0.7);
             clip-path: polygon(0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%, 
@@ -54,19 +41,22 @@
                 var(--m-right) var(--m-bottom), var(--m-left) var(--m-bottom), var(--m-left) var(--m-top));
             pointer-events: auto; transition: clip-path 0.3s ease;
         }
-        /* 설명창 (설명 적혀있는 부분만 최상위) */
         #guide-box {
             position: absolute; width: 380px; background: white; border-radius: 24px; padding: 30px; 
             border: 4px solid var(--primary); z-index: 10001; pointer-events: auto;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6); transition: 0.3s ease;
         }
-        #guide-box::after { /* 화살표 효과 */
-            content: ''; position: absolute; width: 20px; height: 20px; background: white; 
-            border: 4px solid var(--primary); border-top: none; border-right: none;
-            transform: rotate(45deg);
-        }
 
+        /* 기타 UI */
+        #word-display-box { font-size: 11rem; font-weight: 900; color: var(--primary); flex-grow: 1; display: flex; align-items: center; justify-content: center; text-align: center; }
         #countdown-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 11000; display: none; justify-content: center; align-items: center; color: white; font-size: 18rem; font-weight: 900; }
+        #feedback-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 15rem; font-weight: 900; pointer-events: none; z-index: 5000; opacity: 0; white-space: nowrap; }
+        .pop-up { animation: popUpEffect 0.6s ease-out forwards; }
+        @keyframes popUpEffect {
+            0% { opacity: 0; transform: translate(-50%, -40%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -55%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1.2); }
+        }
     </style>
 </head>
 <body>
@@ -94,7 +84,10 @@
     <div id="admin-view" class="view hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 id="admin-title" style="font-weight:800;">퀴즈 제작 도구</h2>
-            <button class="btn btn-outline" onclick="showView('list-view')">취소</button>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline" onclick="startOnboarding()" style="color:var(--primary); border-color:var(--primary);">💡 가이드 보기</button>
+                <button class="btn btn-outline" onclick="showView('list-view')">취소</button>
+            </div>
         </div>
         <div id="admin-scroll-box" style="overflow-y:auto; flex-grow:1; padding-right:10px;">
             <div id="guide-1" class="admin-card">
@@ -157,7 +150,7 @@
     </div>
     <div id="ranking-view" class="view hidden">
         <div style="flex-grow:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-            <h2 style="font-size:4rem; font-weight:900;">🏆 최종 결과</h2>
+            <h2 style="font-size:4rem; font-weight:900;">🏆 최종 순위</h2>
             <div id="rank-list" style="width:750px;"></div>
             <button class="btn btn-primary" style="margin-top:50px; padding:25px 100px; font-size:1.8rem;" onclick="showView('list-view')">목록으로</button>
         </div>
@@ -172,6 +165,7 @@
     let state = { currentIdx: -1, activeQuiz: null, activeGroupIdx: null, words: [], wordIdx: 0, score: 0, timeLeft: 0, timer: null, guideIdx: 0 };
     const defaultGroupNames = ['재','미','있','는','역','사','퀴','즈'];
 
+    // 뷰 전환
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
@@ -179,6 +173,7 @@
         if(id === 'admin-view' && !localStorage.getItem('skip_guide_vFinal')) setTimeout(startOnboarding, 500);
     }
 
+    // 목록 렌더링 및 관리 로직 (이전과 동일)
     function renderQuizList() {
         const container = document.getElementById('quiz-list-items');
         container.innerHTML = quizzes.length ? quizzes.map((q, i) => `
@@ -192,8 +187,6 @@
             </div>
         `).join('') : '<p style="text-align:center; padding:100px; color:var(--text-sub);">퀴즈를 새로 만들어보세요!</p>';
     }
-
-    function deleteQuiz(i) { if(confirm("삭제할까요?")) { quizzes.splice(i, 1); localStorage.setItem('quizzes_vFinal', JSON.stringify(quizzes)); renderQuizList(); } }
 
     function openAdmin(idx = -1) {
         state.currentIdx = idx;
@@ -237,6 +230,8 @@
         showView('list-view');
     }
 
+    // 게임 엔진 로직 (이전과 동일)
+    function deleteQuiz(i) { if(confirm("삭제할까요?")) { quizzes.splice(i, 1); localStorage.setItem('quizzes_vFinal', JSON.stringify(quizzes)); renderQuizList(); } }
     function initSession(idx) {
         state.activeQuiz = quizzes[idx]; sessionResults = [];
         const container = document.getElementById('group-select-container');
@@ -244,13 +239,7 @@
         document.getElementById('rank-btn').classList.add('hidden');
         showView('selection-view');
     }
-
-    function prepareGroup(idx) {
-        state.activeGroupIdx = idx;
-        document.getElementById('ready-team-name').innerText = state.activeQuiz.groups[idx].name;
-        showView('ready-view');
-    }
-
+    function prepareGroup(idx) { state.activeGroupIdx = idx; document.getElementById('ready-team-name').innerText = state.activeQuiz.groups[idx].name; showView('ready-view'); }
     function startCountdown() {
         const overlay = document.getElementById('countdown-overlay');
         overlay.style.display = 'flex';
@@ -260,7 +249,6 @@
             else { clearInterval(itv); overlay.style.display = 'none'; startGame(); }
         }, 1000);
     }
-
     function startGame() {
         const g = state.activeQuiz.groups[state.activeGroupIdx];
         state.words = [...g.words].sort(() => Math.random() - 0.5);
@@ -269,10 +257,6 @@
         document.getElementById('score-cnt').innerText = "0";
         document.getElementById('word-display-box').innerText = state.words[0] || "준비";
         showView('game-view');
-        startTimer();
-    }
-
-    function startTimer() {
         if(state.timer) clearInterval(state.timer);
         state.timer = setInterval(() => {
             state.timeLeft--;
@@ -280,9 +264,8 @@
             if(state.timeLeft <= 0) endGame();
         }, 1000);
     }
-
     function handleAnswer(type) {
-        const fb = document.getElementById('feedback-text'), wb = document.getElementById('word-display-box');
+        const fb = document.getElementById('feedback-text');
         fb.className = ''; void fb.offsetWidth;
         if(type === 'O') { state.score++; fb.innerText = 'CORRECT!'; fb.style.color = 'var(--success)'; }
         else if(type === 'X') { fb.innerText = 'WRONG!'; fb.style.color = 'var(--danger)'; }
@@ -292,7 +275,6 @@
         if(state.wordIdx >= state.words.length) endGame();
         else document.getElementById('word-display-box').innerText = state.words[state.wordIdx];
     }
-
     function endGame() {
         clearInterval(state.timer);
         const name = state.activeQuiz.groups[state.activeGroupIdx].name;
@@ -303,22 +285,21 @@
         showView('team-result-view');
         if(sessionResults.length === state.activeQuiz.groups.length) document.getElementById('rank-btn').classList.remove('hidden');
     }
-
     function showRanking() {
         const sorted = [...sessionResults].sort((a,b) => b.score - a.score);
         document.getElementById('rank-list').innerHTML = sorted.map((r, i) => `
             <div style="display:flex; align-items:center; padding:30px; background:white; border-radius:25px; margin-bottom:15px; font-size:2.2rem; border:4px solid ${i===0?'var(--warning)':'#e2e8f0'};">
                 <span style="width:100px; font-weight:900;">${i+1}위</span>
                 <span style="flex-grow:1;">${r.name}팀</span>
-                <span style="font-weight:900;">${r.score}점 ${i===0?'👑':''}</span>
+                <span style="font-weight:900;">${r.score}점</span>
             </div>
         `).join('');
         showView('ranking-view');
     }
 
-    /* 🔥 혁신적인 가이드 시스템: 설명창만 최상단 유지 */
+    /* 🔥 가이드 시스템 (버튼 연동 버전) */
     const steps = [
-        { id: 'guide-1', title: '🎯 퀴즈 제목', desc: '이 세트가 어떤 주제인지 제목을 입력하세요!<br>예: [우리 반] 역사 퀴즈 1차' },
+        { id: 'guide-1', title: '🎯 퀴즈 제목', desc: '이 세트가 어떤 주제인지 제목을 입력하세요!<br>예: [수도 맞히기] 세계 여행 퀴즈' },
         { id: 'guide-2', title: '⏳ 규칙 설정', desc: '팀 수와 한 팀당 주어질 제한 시간을 정합니다.' },
         { id: 'guide-3', title: '📝 문제 리스트', desc: '각 팀이 맞출 단어들을 <b>쉼표(,)</b>로 구분하여 입력해주세요.' }
     ];
@@ -335,45 +316,49 @@
         const box = document.getElementById('guide-box');
         const overlay = document.getElementById('guide-overlay');
         
-        // 타겟 위치 정보 획득
-        const rect = target.getBoundingClientRect();
+        // 타겟 위치 정보 및 스크롤 정렬
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        // 1. 마스크(구멍) 업데이트 (CSS 변수 사용)
-        overlay.style.setProperty('--m-top', rect.top + 'px');
-        overlay.style.setProperty('--m-bottom', rect.bottom + 'px');
-        overlay.style.setProperty('--m-left', rect.left + 'px');
-        overlay.style.setProperty('--m-right', rect.right + 'px');
-        
-        // 2. 가이드 박스 위치 계산
-        let bLeft, bTop;
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
+        // 스크롤 이동 시간을 고려하여 약간의 지연 후 좌표 계산
+        setTimeout(() => {
+            const rect = target.getBoundingClientRect();
+            
+            // 1. 마스크 업데이트
+            overlay.style.setProperty('--m-top', rect.top + 'px');
+            overlay.style.setProperty('--m-bottom', rect.bottom + 'px');
+            overlay.style.setProperty('--m-left', rect.left + 'px');
+            overlay.style.setProperty('--m-right', rect.right + 'px');
+            
+            // 2. 가이드 박스 위치 계산
+            let bLeft, bTop;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
 
-        if (rect.left + rect.width / 2 > screenWidth / 2) {
-            bLeft = rect.left - 410; // 타겟 왼쪽
-        } else {
-            bLeft = rect.right + 30; // 타겟 오른쪽
-        }
-        
-        // 세로 위치 (타겟과 정렬)
-        bTop = rect.top;
-        if (bTop + 280 > screenHeight) bTop = screenHeight - 300;
-        if (bTop < 20) bTop = 20;
+            if (rect.left + rect.width / 2 > screenWidth / 2) bLeft = rect.left - 410;
+            else bLeft = rect.right + 30;
+            
+            if (bLeft < 20) bLeft = 20;
+            if (bLeft + 380 > screenWidth - 20) bLeft = screenWidth - 400;
 
-        box.style.left = bLeft + 'px';
-        box.style.top = bTop + 'px';
-        
-        document.getElementById('g-title').innerHTML = s.title;
-        document.getElementById('g-desc').innerHTML = s.desc;
+            bTop = rect.top;
+            if (bTop + 280 > screenHeight) bTop = screenHeight - 300;
+            if (bTop < 20) bTop = 20;
 
-        document.getElementById('g-next').onclick = (e) => {
-            e.stopPropagation();
-            if(++state.guideIdx < steps.length) updateGuide();
-            else {
-                if(document.getElementById('g-skip').checked) localStorage.setItem('skip_guide_vFinal', 'true');
-                document.getElementById('guide-overlay').style.display = 'none';
-            }
-        };
+            box.style.left = bLeft + 'px';
+            box.style.top = bTop + 'px';
+            
+            document.getElementById('g-title').innerHTML = s.title;
+            document.getElementById('g-desc').innerHTML = s.desc;
+
+            document.getElementById('g-next').onclick = (e) => {
+                e.stopPropagation();
+                if(++state.guideIdx < steps.length) updateGuide();
+                else {
+                    if(document.getElementById('g-skip').checked) localStorage.setItem('skip_guide_vFinal', 'true');
+                    document.getElementById('guide-overlay').style.display = 'none';
+                }
+            };
+        }, 300);
     }
 
     window.onload = () => renderQuizList();
