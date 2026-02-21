@@ -3,298 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Quiz Pro - Desktop</title>
+    <title>Speed Quiz Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #059669;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --text-main: #0f172a;
-            --text-sub: #475569;
-            --border: #e2e8f0;
-            --radius-lg: 24px;
-            --radius-md: 12px;
-            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            --bg: #ffffff;
+            --sidebar: #f8f9fa;
+            --text: #1f1f1f;
+            --text-sub: #5f6368;
+            --border: #dadce0;
+            --primary: #1a73e8;
+            --primary-light: #e8f0fe;
+            --success: #1e8e3e;
+            --danger: #d93025;
+            --warning: #f9ab00;
+            --radius: 8px;
+            --header-h: 64px;
         }
 
-        * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; outline: none; }
+        [data-theme='dark'] {
+            --bg: #131314;
+            --sidebar: #1e1f20;
+            --text: #e3e3e3;
+            --text-sub: #c4c7c5;
+            --border: #444746;
+            --primary: #a8c7fa;
+            --primary-light: #394457;
+            --success: #6dd58c;
+            --danger: #f28b82;
+            --warning: #fdd663;
+        }
+
+        * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; transition: background 0.3s, color 0.3s, border-color 0.3s; }
         
-        body { 
-            background: var(--bg-gradient); 
-            color: var(--text-main); 
-            margin: 0; 
-            height: 100vh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            overflow: hidden;
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+
+        /* Layout */
+        .layout { display: flex; flex-direction: column; height: 100vh; }
+        
+        header { 
+            height: var(--header-h); border-bottom: 1px solid var(--border); 
+            display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+            background: var(--bg); z-index: 100;
         }
 
-        .desktop-wrapper {
-            width: 1100px;
-            height: 750px;
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.3);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            backdrop-filter: blur(10px);
-        }
+        .logo { font-size: 1.2rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 10px; }
 
-        /* Views */
-        .view {
-            padding: 40px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.4s ease;
-            overflow: hidden;
-        }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        /* Sidebar */
+        nav { width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+        /* Main View Container */
+        main { flex: 1; overflow-y: auto; position: relative; padding: 40px; display: flex; flex-direction: column; }
+
+        /* Elements */
+        .btn {
+            padding: 10px 24px; border-radius: 50px; border: 1px solid var(--border); 
+            background: transparent; color: var(--text); font-weight: 500; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;
+        }
+        .btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+        .btn-filled { background: var(--primary); color: white !important; border: none; }
+        .btn-filled:hover { filter: brightness(1.1); }
+
+        .input {
+            background: transparent; border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 12px 16px; color: var(--text); font-size: 1rem; width: 100%;
+        }
+        .input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px var(--primary-light); }
+
+        /* Progress Bar */
+        .timer-progress-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: var(--border); }
+        #timer-bar { width: 100%; height: 100%; background: var(--primary); transition: width 0.1s linear, background-color 0.3s; }
+
+        /* Quiz 진행 UI */
+        .quiz-header { text-align: center; margin-bottom: 60px; }
+        .word-display { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            font-size: 8rem; font-weight: 700; text-align: center;
+        }
+        
+        .quiz-controls { display: flex; justify-content: center; gap: 40px; margin-bottom: 40px; }
+        .control-btn {
+            width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .control-btn .symbol { font-size: 2.5rem; font-weight: 300; margin-bottom: 5px; }
+        .control-btn .label { font-size: 0.85rem; font-weight: 600; }
+
+        .btn-correct:hover { border-color: var(--success); color: var(--success); background: var(--primary-light); }
+        .btn-wrong:hover { border-color: var(--danger); color: var(--danger); background: #fce8e6; }
+        .btn-pass:hover { border-color: var(--warning); color: var(--warning); background: #fef7e0; }
+
+        /* Editor UI */
+        .editor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; margin-top: 30px; }
+        .group-card { background: var(--sidebar); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); }
+
+        /* Hidden Class */
         .hidden { display: none !important; }
 
-        /* Typography */
-        h1 { font-size: 3rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 10px 0; color: var(--text-main); }
-        h2 { font-size: 1.8rem; font-weight: 700; margin: 0 0 20px 0; }
+        /* Animations */
+        @keyframes flashSuccess { 0% { background: var(--bg); } 50% { background: #e6f4ea; } 100% { background: var(--bg); } }
+        @keyframes flashWrong { 0% { background: var(--bg); } 50% { background: #fce8e6; } 100% { background: var(--bg); } }
+        .animate-success { animation: flashSuccess 0.4s ease; }
+        .animate-wrong { animation: flashWrong 0.4s ease; }
 
-        /* Buttons */
-        .btn-group { display: flex; gap: 12px; }
-        .btn {
-            border: none; border-radius: var(--radius-md); padding: 14px 28px;
-            font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex; align-items: center; justify-content: center;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn:active { transform: translateY(0); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-sub); }
-        .btn-outline:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
-
-        /* Quiz Grid */
-        .quiz-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-        .quiz-card {
-            background: white; border: 1px solid var(--border); border-radius: var(--radius-md);
-            padding: 24px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .quiz-card:hover { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1); }
-
-        /* Admin Layout */
-        .admin-scroll { overflow-y: auto; flex-grow: 1; padding-right: 20px; }
-        .config-section { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; 
-            background: #f8fafc; padding: 25px; border-radius: var(--radius-md); margin-bottom: 30px;
-        }
-        .input-box label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-sub); margin-bottom: 8px; }
-        .input-box input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
-        
-        .groups-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .group-editor { background: white; border: 1px solid var(--border); padding: 20px; border-radius: var(--radius-md); }
-
-        /* Game UI */
-        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; }
-        .timer-box { font-size: 4rem; font-weight: 900; color: var(--primary); font-variant-numeric: tabular-nums; }
-        .score-pill { background: #eff6ff; color: var(--primary); padding: 10px 24px; border-radius: 100px; font-weight: 800; font-size: 1.2rem; }
-        .word-container {
-            flex-grow: 1; display: flex; align-items: center; justify-content: center;
-            background: #f8fafc; border-radius: var(--radius-lg); margin-bottom: 50px;
-            border: 2px dashed #e2e8f0; position: relative;
-        }
-        .word-text { font-size: 7rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.03em; }
-
-        /* Selection View */
-        .sentence-hero { font-size: 3.5rem; font-weight: 900; color: var(--primary); text-align: center; margin-bottom: 60px; letter-spacing: 15px; }
-        .group-selector-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .selector-item {
-            width: 120px; height: 120px; border-radius: 24px; border: 2px solid var(--border);
-            display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800;
-            cursor: pointer; transition: 0.3s; background: white;
-        }
-        .selector-item:not(.done):hover { border-color: var(--primary); color: var(--primary); transform: translateY(-5px); }
-        .selector-item.done { background: #f1f5f9; color: #cbd5e1; border-color: #f1f5f9; cursor: default; }
-
-        /* Overlays */
-        #flash { position: absolute; inset: 0; pointer-events: none; z-index: 100; opacity: 0; transition: 0.1s; border-radius: var(--radius-lg); }
-        #toast { 
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%); 
-            background: #1e293b; color: white; padding: 12px 30px; border-radius: 100px; 
-            font-weight: 600; opacity: 0; transition: 0.3s; z-index: 1000;
-        }
-        .modal {
-            position: absolute; inset: 0; background: rgba(15, 23, 42, 0.8);
-            display: flex; justify-content: center; align-items: center; z-index: 2000;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content { background: white; padding: 50px; border-radius: var(--radius-lg); text-align: center; width: 450px; }
+        /* Result Podium */
+        .result-item { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); }
+        .rank-num { font-size: 1.5rem; font-weight: 800; width: 60px; color: var(--primary); }
     </style>
 </head>
-<body>
+<body data-theme="light">
 
-<div class="desktop-wrapper">
-    <div id="flash"></div>
-    <div id="toast">메시지</div>
-
-    <div id="modal-wrap" class="modal hidden">
-        <div class="modal-content">
-            <h2 id="modal-title">알림</h2>
-            <p id="modal-body" style="font-size: 1.2rem; color: var(--text-sub); margin-bottom: 30px;"></p>
-            <button class="btn btn-primary" style="width: 100%;" onclick="closeModal()">확인</button>
+<div class="layout">
+    <header>
+        <div class="logo">
+            <span>Speed-Quiz</span>
         </div>
-    </div>
+        <div style="display:flex; gap:16px; align-items:center;">
+            <button class="btn" id="theme-toggle">🌓 Theme</button>
+            <button class="btn btn-filled" onclick="openAdmin()">+ Create Quiz</button>
+        </div>
+    </header>
 
-    <div id="main-view" class="view">
-        <div style="margin-top: 100px;">
-            <p style="text-transform: uppercase; letter-spacing: 0.2em; color: var(--primary); font-weight: 800; margin-bottom: 10px;">The Professional Choice</p>
-            <h1>Speed Quiz Pro</h1>
-            <p style="font-size: 1.4rem; color: var(--text-sub); margin-bottom: 50px; max-width: 500px; line-height: 1.6;">
-                복잡한 설정 없이 쉽고 빠르게 진행하는 데스크탑용 스피드 퀴즈 도구입니다.
-            </p>
-            <div class="btn-group">
-                <button class="btn btn-primary" style="padding: 18px 45px;" onclick="showView('list-view')">내 퀴즈 라이브러리</button>
-                <button class="btn btn-outline" style="padding: 18px 45px;" onclick="openAdmin()">새로운 퀴즈 생성</button>
+    <div class="main-container">
+        <nav id="sidebar">
+            <p style="font-size: 0.8rem; font-weight: 700; color: var(--text-sub); margin-left: 12px; margin-bottom: 12px;">LIBRARY</p>
+            <div id="quiz-list-sidebar"></div>
+        </nav>
+
+        <main>
+            <div id="start-view" class="view">
+                <h1 style="font-size: 3rem; margin-top: 100px;">안녕하세요,<br><span style="color:var(--primary)">스피드 퀴즈</span>를 시작할까요?</h1>
+                <p style="color:var(--text-sub); font-size: 1.1rem; max-width: 600px; line-height: 1.6;">
+                    라이브러리에서 기존 퀴즈를 선택하거나 우측 상단의 'Create Quiz' 버튼을 눌러 새로운 프로젝트를 만드세요. 
+                    Gemini 스타일의 세련된 인터페이스로 퀴즈를 진행할 수 있습니다.
+                </p>
             </div>
-        </div>
-    </div>
 
-    <div id="list-view" class="view hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-            <h2>퀴즈 라이브러리</h2>
-            <button class="btn btn-outline" onclick="showView('main-view')">홈으로</button>
-        </div>
-        <div id="quiz-grid" class="quiz-grid"></div>
-    </div>
-
-    <div id="admin-view" class="view hidden">
-        <h2>퀴즈 에디터</h2>
-        <div class="admin-scroll">
-            <div class="config-section">
-                <div class="input-box" style="grid-column: span 2;">
-                    <label>프로젝트 제목</label>
-                    <input type="text" id="quiz-title-input" placeholder="이름을 입력하세요">
+            <div id="admin-view" class="view hidden">
+                <h2>퀴즈 편집기</h2>
+                <div style="max-width: 800px; display: grid; gap: 20px;">
+                    <input type="text" id="quiz-title-input" class="input" placeholder="프로젝트 제목을 입력하세요">
+                    <div style="display:flex; gap:16px;">
+                        <input type="number" id="limit-time" class="input" value="60" placeholder="시간(초)">
+                        <input type="number" id="group-count" class="input" value="3" onchange="renderGroupInputs()" placeholder="그룹 수">
+                    </div>
                 </div>
-                <div class="input-box">
-                    <label>제한 시간 (초)</label>
-                    <input type="number" id="limit-time" value="60">
-                </div>
-                <div class="input-box">
-                    <label>그룹 개수 (최대 10)</label>
-                    <input type="number" id="group-count" value="3" onchange="renderGroupInputs()">
-                </div>
-                <div class="input-box">
-                    <label>패스 횟수</label>
-                    <input type="number" id="pass-limit" value="3">
+                <div id="groups-container" class="editor-grid"></div>
+                <div style="margin-top: 40px;">
+                    <button class="btn btn-filled" onclick="saveQuiz()">저장 후 완료</button>
+                    <button class="btn" onclick="showView('start-view')">취소</button>
                 </div>
             </div>
-            <div id="groups-container" class="groups-list"></div>
-        </div>
-        <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
-            <button class="btn btn-outline" onclick="showView('list-view')">취소</button>
-            <button class="btn btn-primary" onclick="saveQuiz()">프로젝트 저장</button>
-        </div>
-    </div>
 
-    <div id="selection-view" class="view hidden">
-        <div class="sentence-hero" id="sentence-display"></div>
-        <div class="group-selector-grid" id="group-buttons-container"></div>
-        <div style="margin-top: auto; text-align: center;">
-            <button class="btn btn-outline" onclick="showView('list-view')">라이브러리로 돌아가기</button>
-        </div>
-    </div>
+            <div id="selection-view" class="view hidden">
+                <div style="text-align:center; margin-bottom: 60px;">
+                    <h1 id="sentence-display" style="letter-spacing: 10px;"></h1>
+                    <p style="color:var(--text-sub)">진행할 그룹을 선택해 주세요.</p>
+                </div>
+                <div id="group-buttons-container" style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px;"></div>
+            </div>
 
-    <div id="play-view" class="view hidden">
-        <div class="game-header">
-            <div class="score-pill">SCORE : <span id="current-score">0</span></div>
-            <div class="timer-box" id="timer-display">60</div>
-            <div class="score-pill" style="background: #f8fafc;">PASS : <span id="pass-count">0</span></div>
-        </div>
-        <div class="word-container">
-            <div id="word-display" class="word-text">READY</div>
-        </div>
-        <div class="btn-group" style="justify-content: center; gap: 20px;">
-            <button class="btn btn-primary" style="background: var(--success); width: 250px; height: 80px; font-size: 1.5rem;" onclick="handleAnswer(true)">정답 (O)</button>
-            <button class="btn btn-primary" style="background: var(--danger); width: 250px; height: 80px; font-size: 1.5rem;" onclick="handleAnswer(false)">오답 (X)</button>
-            <button id="pass-btn" class="btn btn-outline" style="width: 200px; height: 80px;" onclick="handlePass()">패스</button>
-        </div>
-    </div>
+            <div id="play-view" class="view hidden">
+                <div class="timer-progress-wrap"><div id="timer-bar"></div></div>
+                <div class="quiz-header">
+                    <p style="font-weight:700; color:var(--text-sub)">GROUP: <span id="current-group-name"></span></p>
+                    <div style="font-size: 1.5rem; font-weight: 800;">SCORE: <span id="current-score" style="color:var(--primary)">0</span></div>
+                </div>
+                <div class="word-display" id="word-display">READY</div>
+                <div class="quiz-controls">
+                    <div class="control-btn btn-correct" onclick="handleAnswer(true)">
+                        <span class="symbol">○</span>
+                        <span class="label">정답입니다</span>
+                    </div>
+                    <div class="control-btn btn-wrong" onclick="handleAnswer(false)">
+                        <span class="symbol">×</span>
+                        <span class="label">틀렸습니다</span>
+                    </div>
+                    <div class="control-btn btn-pass" onclick="handlePass()">
+                        <span class="symbol">△</span>
+                        <span class="label">패스!</span>
+                    </div>
+                </div>
+            </div>
 
-    <div id="result-view" class="view hidden">
-        <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">최종 결과 보고서</h2>
-        <div id="rankings-container" style="display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; width: 100%;"></div>
-        <div id="bonus-area" class="hidden" style="text-align: center; margin-top: 40px;">
-            <button class="btn btn-primary" style="background: var(--warning);" onclick="startBonusGame()">동점자 발생! 보너스 게임 시작</button>
-        </div>
-        <div style="margin-top: auto; text-align: center;">
-            <button class="btn btn-outline" onclick="showView('main-view')">메인 화면으로</button>
-        </div>
+            <div id="result-view" class="view hidden">
+                <h1 style="text-align:center; margin-bottom: 40px;">퀴즈 결과 리포트</h1>
+                <div id="rankings-list" style="max-width: 700px; margin: 0 auto; width: 100%; border-top: 1px solid var(--border);"></div>
+                <div style="text-align:center; margin-top: 50px;">
+                    <button class="btn btn-filled" onclick="showView('start-view')">메인으로 돌아가기</button>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
 <script>
-    let quizzes = JSON.parse(localStorage.getItem('quizzes_pc_v1')) || [];
-    let state = { currentQuiz: null, playingIdx: -1, results: [], played: new Set(), timer: null, timeLeft: 0, wordIdx: 0, score: 0, passes: 0, words: [] };
+    let quizzes = JSON.parse(localStorage.getItem('quizzes_gemini_v1')) || [];
+    let state = { currentQuiz: null, playingIdx: -1, results: [], played: new Set(), timer: null, totalTime: 60, timeLeft: 60, wordIdx: 0, score: 0, words: [] };
 
-    // UI Helper
+    // Theme Toggle
+    document.getElementById('theme-toggle').onclick = () => {
+        const body = document.body;
+        const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', newTheme);
+    };
+
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
-        if(id === 'list-view') renderQuizList();
+        renderSidebar();
     }
 
-    function showAlert(title, body) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-body').innerText = body;
-        document.getElementById('modal-wrap').classList.remove('hidden');
-    }
-
-    function closeModal() { document.getElementById('modal-wrap').classList.add('hidden'); }
-
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.style.opacity = '1';
-        setTimeout(() => t.style.opacity = '0', 2000);
-    }
-
-    // List & Admin
-    function renderQuizList() {
-        const grid = document.getElementById('quiz-grid');
-        grid.innerHTML = quizzes.map((q, i) => `
-            <div class="quiz-card">
-                <div>
-                    <div style="font-size: 1.4rem; font-weight: 800; margin-bottom: 5px;">${q.title}</div>
-                    <div style="color: var(--text-sub); font-size: 0.95rem;">그룹: ${q.groups.length}개 | 제한시간: ${q.time}초</div>
-                </div>
-                <div class="btn-group" style="margin-top: 20px;">
-                    <button class="btn btn-primary" style="flex: 2; padding: 10px;" onclick="startQuiz(${i})">시작</button>
-                    <button class="btn btn-outline" style="flex: 1; padding: 10px;" onclick="deleteQuiz(${i})">삭제</button>
-                </div>
+    function renderSidebar() {
+        const sidebar = document.getElementById('quiz-list-sidebar');
+        sidebar.innerHTML = quizzes.map((q, i) => `
+            <div onclick="startQuiz(${i})" style="padding:12px; cursor:pointer; border-radius:12px; font-size:0.9rem; font-weight:500;" 
+                 onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
+                ${q.title}
             </div>
         `).join('');
     }
 
     function renderGroupInputs() {
         const c = document.getElementById('groups-container');
-        const count = Math.min(document.getElementById('group-count').value || 0, 10);
+        const count = document.getElementById('group-count').value;
         c.innerHTML = '';
         for(let i=0; i<count; i++) {
             c.innerHTML += `
-                <div class="group-editor">
-                    <label style="display:block; font-weight:700; margin-bottom:10px;">그룹 ${i+1}</label>
-                    <input type="text" class="g-name" placeholder="그룹 이름 (예: 재)" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
-                    <textarea class="g-words" placeholder="단어들을 콤마(,)로 구분" style="width:100%; height:80px; padding:10px; border:1px solid #ddd; border-radius:5px; resize:none;"></textarea>
+                <div class="group-card">
+                    <label style="font-size:0.8rem; font-weight:700; color:var(--text-sub)">GROUP ${i+1}</label>
+                    <input type="text" class="g-name input" placeholder="이름 (예: 재)" style="margin:8px 0;">
+                    <textarea class="g-words input" placeholder="단어 (콤마 구분)" style="height:80px; resize:none;"></textarea>
                 </div>`;
         }
     }
@@ -308,27 +251,18 @@
         const title = document.getElementById('quiz-title-input').value;
         const names = document.querySelectorAll('.g-name');
         const words = document.querySelectorAll('.g-words');
-        if(!title) { showToast("제목을 입력해주세요."); return; }
+        if(!title) return;
         
         let groups = [];
         names.forEach((n, i) => {
             if(n.value) groups.push({ name: n.value, words: words[i].value.split(',').map(s=>s.trim()).filter(s=>s) });
         });
         
-        quizzes.push({ title, groups, time: document.getElementById('limit-time').value, pass: document.getElementById('pass-limit').value });
-        localStorage.setItem('quizzes_pc_v1', JSON.stringify(quizzes));
-        showView('list-view');
+        quizzes.push({ title, groups, time: parseInt(document.getElementById('limit-time').value) });
+        localStorage.setItem('quizzes_gemini_v1', JSON.stringify(quizzes));
+        showView('start-view');
     }
 
-    function deleteQuiz(i) {
-        if(confirm("이 퀴즈를 삭제하시겠습니까?")) {
-            quizzes.splice(i, 1);
-            localStorage.setItem('quizzes_pc_v1', JSON.stringify(quizzes));
-            renderQuizList();
-        }
-    }
-
-    // Game Core
     function startQuiz(idx) {
         state.currentQuiz = quizzes[idx];
         state.results = [];
@@ -338,10 +272,11 @@
 
     function showSelection() {
         showView('selection-view');
-        document.getElementById('sentence-display').innerText = state.currentQuiz.groups.map(g => g.name).join(' ');
+        document.getElementById('sentence-display').innerText = state.currentQuiz.groups.map(g => g.name).join('');
         const container = document.getElementById('group-buttons-container');
         container.innerHTML = state.currentQuiz.groups.map((g, i) => `
-            <div class="selector-item ${state.played.has(i)?'done':''}" onclick="${state.played.has(i)?'':'prepareGame('+i+')'}">${g.name}</div>
+            <div class="btn" style="padding:24px; font-size:1.5rem; ${state.played.has(i)?'opacity:0.3; cursor:default;':''}" 
+                 onclick="${state.played.has(i)?'':'prepareGame('+i+')'}">${g.name}</div>
         `).join('');
         if(state.played.size === state.currentQuiz.groups.length) showResults();
     }
@@ -349,16 +284,19 @@
     function prepareGame(idx) {
         state.playingIdx = idx;
         state.words = [...state.currentQuiz.groups[idx].words].sort(() => Math.random() - 0.5);
-        state.wordIdx = 0; state.score = 0; state.timeLeft = state.currentQuiz.time;
-        state.passes = state.currentQuiz.pass;
+        state.wordIdx = 0; state.score = 0; 
+        state.totalTime = state.currentQuiz.time;
+        state.timeLeft = state.totalTime;
+        
+        document.getElementById('current-group-name').innerText = state.currentQuiz.groups[idx].name;
         showView('play-view');
         updatePlayUI();
         
         let cnt = 3;
         const disp = document.getElementById('word-display');
-        const countInt = setInterval(() => {
-            disp.innerText = cnt > 0 ? cnt : 'START!';
-            if(cnt < 0) { clearInterval(countInt); runGame(); }
+        const cd = setInterval(() => {
+            disp.innerText = cnt > 0 ? cnt : 'GO';
+            if(cnt < 0) { clearInterval(cd); runGame(); }
             cnt--;
         }, 800);
     }
@@ -366,10 +304,10 @@
     function runGame() {
         nextWord();
         state.timer = setInterval(() => {
-            state.timeLeft--;
-            document.getElementById('timer-display').innerText = state.timeLeft;
+            state.timeLeft -= 0.1;
+            updatePlayUI();
             if(state.timeLeft <= 0) endGame();
-        }, 1000);
+        }, 100);
     }
 
     function nextWord() {
@@ -378,10 +316,10 @@
     }
 
     function handleAnswer(isO) {
-        const flash = document.getElementById('flash');
-        flash.style.background = isO ? 'rgba(5, 150, 105, 0.1)' : 'rgba(220, 38, 38, 0.1)';
-        flash.style.opacity = '1';
-        setTimeout(() => flash.style.opacity = '0', 150);
+        const main = document.querySelector('main');
+        main.classList.remove('animate-success', 'animate-wrong');
+        void main.offsetWidth; // Trigger reflow
+        main.classList.add(isO ? 'animate-success' : 'animate-wrong');
 
         if(isO) state.score++;
         state.wordIdx++;
@@ -390,54 +328,45 @@
     }
 
     function handlePass() {
-        if(state.passes > 0) {
-            state.passes--;
-            state.wordIdx++;
-            updatePlayUI();
-            nextWord();
-        } else {
-            showToast("패스 기회가 없습니다!");
-        }
+        state.wordIdx++;
+        updatePlayUI();
+        nextWord();
     }
 
     function updatePlayUI() {
         document.getElementById('current-score').innerText = state.score;
-        document.getElementById('pass-count').innerText = state.passes;
-        document.getElementById('timer-display').innerText = state.timeLeft;
+        const bar = document.getElementById('timer-bar');
+        const pct = (state.timeLeft / state.totalTime) * 100;
+        bar.style.width = pct + '%';
+        
+        // Color Change
+        if(pct > 50) bar.style.backgroundColor = 'var(--primary)';
+        else if(pct > 20) bar.style.backgroundColor = 'var(--warning)';
+        else bar.style.backgroundColor = 'var(--danger)';
     }
 
     function endGame() {
         clearInterval(state.timer);
         state.results.push({ name: state.currentQuiz.groups[state.playingIdx].name, score: state.score });
         state.played.add(state.playingIdx);
-        showAlert("라운드 종료", `${state.currentQuiz.groups[state.playingIdx].name} 그룹의 최종 점수는 ${state.score}점입니다.`);
         showSelection();
     }
 
     function showResults() {
         showView('result-view');
         const sorted = [...state.results].sort((a,b) => b.score - a.score);
-        const container = document.getElementById('rankings-container');
+        const container = document.getElementById('rankings-list');
         container.innerHTML = sorted.map((r, i) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; background:${i===0?'#eff6ff':'white'}; border:1px solid ${i===0?'var(--primary)':'var(--border)'}; border-radius:15px;">
-                <span style="font-weight:800; font-size:1.2rem;">${i+1}위. ${r.name} 그룹</span>
-                <span style="font-weight:800; color:var(--primary); font-size:1.5rem;">${r.score} Point</span>
+            <div class="result-item">
+                <div class="rank-num">${i+1}</div>
+                <div style="flex:1; font-weight:600; font-size:1.1rem;">${r.name} Group</div>
+                <div style="font-weight:800; color:var(--primary); font-size:1.4rem;">${r.score} pt</div>
             </div>
         `).join('');
-
-        if(sorted.length > 1 && sorted[0].score === sorted[1].score) {
-            document.getElementById('bonus-area').classList.remove('hidden');
-        }
     }
 
-    function startBonusGame() {
-        const allWords = state.currentQuiz.groups.flatMap(g => g.words);
-        state.currentQuiz = { ...state.currentQuiz, groups: [
-            { name: "Winner 1", words: allWords.sort(() => Math.random() - 0.5).slice(0, 10) },
-            { name: "Winner 2", words: allWords.sort(() => Math.random() - 0.5).slice(0, 10) }
-        ]};
-        state.results = []; state.played.clear(); showSelection();
-    }
+    renderSidebar();
 </script>
+
 </body>
 </html>
